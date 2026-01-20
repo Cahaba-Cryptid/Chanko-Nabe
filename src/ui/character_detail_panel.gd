@@ -98,6 +98,10 @@ func _refresh_display() -> void:
 		_add_stat_label("Belly", -1, character_data.get_belly_label())
 		_add_stat_label("Bust", -1, character_data.get_bust_label())
 		_add_stat_label("", -1)  # Spacer
+		# Follower info
+		_add_stat_label("Followers", -1, character_data.format_followers())
+		_add_stat_label("Rank", -1, character_data.get_follower_rank())
+		_add_stat_label("", -1)  # Spacer
 		_add_stat_label("Salary", character_data.daily_salary, "/day")
 
 		if character_data.is_exhausted():

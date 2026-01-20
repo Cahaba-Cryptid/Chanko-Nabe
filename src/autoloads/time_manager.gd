@@ -129,7 +129,6 @@ func _process_burnout_recovery() -> void:
 	## Tick down burnout debuff durations at end of day
 	for character in GameManager.characters:
 		if character.burnout_days_remaining > 0:
-			var old_penalty: int = character.burnout_charm_penalty
 			character.tick_burnout()
 			if character.burnout_days_remaining <= 0:
 				var msg := "%s recovered from burnout (charm restored)" % character.display_name
@@ -167,7 +166,6 @@ func _process_follower_decay() -> void:
 		if character.followers > 0 and decay_amount < 1:
 			decay_amount = 1
 
-		var old_followers: int = character.followers
 		character.followers = maxi(0, character.followers - decay_amount)
 
 		if decay_amount > 0:
@@ -192,7 +190,6 @@ func _process_hunger_mood_fatigue() -> void:
 			continue
 
 		var old_fatigue: int = character.fatigue
-		var old_mood: int = character.mood
 
 		# Hunger affects mood
 		if character.stomach_fullness == 0:
@@ -456,9 +453,10 @@ func _on_character_task_complete(character: CharacterData, original_duration: fl
 			_complete_standard_task(character, station_name)
 
 
-func _complete_standard_task(character: CharacterData, station_name: String) -> void:
+func _complete_standard_task(character: CharacterData, _station_name: String) -> void:
 	## Standard station completion - generates income based on followers, drains energy
 	# Base income scales with followers: $1 per 100 followers, minimum $10
+	@warning_ignore("integer_division")
 	var follower_income := maxi(10, character.followers / 100)
 	var licensee_bonus := _get_licensee_effectiveness_bonus()
 	var effectiveness := character.get_effectiveness(licensee_bonus) / 100.0
@@ -553,8 +551,10 @@ func _complete_stream_task(character: CharacterData) -> void:
 	var kit_contents: Array = stream_data.get("kit_contents", [])
 	var added_items: Array = stream_data.get("added_items", [])
 	var stream_kinks: Array = stream_data.get("stream_kinks", [])
+	var items_eaten: int = 0
 
 	# Calculate base income from followers
+	@warning_ignore("integer_division")
 	var follower_income := maxi(10, character.followers / 100)
 	var licensee_bonus := _get_licensee_effectiveness_bonus()
 	var effectiveness := character.get_effectiveness(licensee_bonus) / 100.0
@@ -592,8 +592,6 @@ func _complete_stream_task(character: CharacterData) -> void:
 	character.last_stream_day = GameManager.current_day
 
 	# Process food consumption from stream (kit contents + added items)
-	var items_eaten := 0
-
 	# Process kit contents - look up fill values from vendi_items.json
 	for content in kit_contents:
 		var item_id: String = content.get("id", "")
@@ -602,28 +600,21 @@ func _complete_stream_task(character: CharacterData) -> void:
 		total_fill += fill * qty  # Add to total (stream_data.total_fill may already have this)
 		items_eaten += qty
 
-	# Process added items from inventory
-	for item in added_items:
-		var qty: int = item.get("quantity", 1)
-		items_eaten += qty
-
 	# Apply food fill to stomach
 	if total_fill > 0:
-		var old_fullness := character.stomach_fullness
 		character.eat(total_fill)
-		var actual_fill := character.stomach_fullness - old_fullness
 
 		# Streaming capacity training - reduced chance compared to binge (showing off, not pushing limits)
 		var fullness_percent := float(character.stomach_fullness) / float(character.stomach_capacity) * 100.0
-		var capacity_gained := 0
 		if fullness_percent >= 75.0:
 			# Half the chance of binge (12.5% to 25% instead of 25% to 50%)
 			var capacity_chance := (0.25 + (fullness_percent - 75.0) / 100.0) * 0.5
 			if randf() < capacity_chance:
-				capacity_gained = randi_range(1, 2)  # Less gain than binge
+				var capacity_gained := randi_range(1, 2)  # Less gain than binge
 				character.stomach_capacity += capacity_gained
 
 		# Weight gain from eating on stream (distributes to body parts)
+		@warning_ignore("integer_division")
 		var weight_gained := total_fill / 50
 		if weight_gained > 0:
 			character.add_weight(weight_gained)
@@ -730,16 +721,16 @@ func _complete_milking_task(character: CharacterData) -> void:
 
 	if not character.is_lactating:
 		# Not lactating, nothing to milk
-		var activity_msg := "%s isn't lactating - no milk to collect" % character.display_name
-		activity_logged.emit(activity_msg)
-		print(activity_msg)
+		var msg_not_lactating := "%s isn't lactating - no milk to collect" % character.display_name
+		activity_logged.emit(msg_not_lactating)
+		print(msg_not_lactating)
 		return
 
 	var milk_collected := character.milk_current
 	if milk_collected <= 0:
-		var activity_msg := "%s had no milk to collect" % character.display_name
-		activity_logged.emit(activity_msg)
-		print(activity_msg)
+		var msg_no_milk := "%s had no milk to collect" % character.display_name
+		activity_logged.emit(msg_no_milk)
+		print(msg_no_milk)
 		return
 
 	# Calculate income from milk

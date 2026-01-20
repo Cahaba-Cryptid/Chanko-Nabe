@@ -497,20 +497,151 @@ func get_stomach_space() -> int:
 
 
 # =============================================================================
+# FOLLOWER RANK SYSTEM
+# =============================================================================
+
+## Follower thresholds for each rank (must be sorted ascending)
+const FOLLOWER_RANK_THRESHOLDS := [
+	50,          # Nobody
+	100,         # Newbie
+	250,         # Amateur
+	500,         # Hopeful
+	1000,        # Known
+	2500,        # Rising
+	5000,        # Notable
+	10000,       # Popular
+	25000,       # Trending
+	50000,       # Famous
+	100000,      # Star
+	250000,      # Superstar
+	500000,      # Icon
+	1000000,     # Millionaire
+	2500000,     # Sensation
+	5000000,     # Megastar
+	10000000,    # Legend
+	25000000,    # Global
+	50000000,    # Titan
+	100000000,   # Planetary
+	250000000,   # Continental
+	500000000,   # Deity
+	1000000000   # Singularity
+]
+
+## Rank names corresponding to thresholds
+const FOLLOWER_RANK_NAMES := [
+	"Nobody",
+	"Newbie",
+	"Amateur",
+	"Hopeful",
+	"Known",
+	"Rising",
+	"Notable",
+	"Popular",
+	"Trending",
+	"Famous",
+	"Star",
+	"Superstar",
+	"Icon",
+	"Millionaire",
+	"Sensation",
+	"Megastar",
+	"Legend",
+	"Global",
+	"Titan",
+	"Planetary",
+	"Continental",
+	"Deity",
+	"Singularity"
+]
+
+## Act boundaries (which rank index starts each act)
+const ACT_BOUNDARIES := {
+	1: 0,   # Act 1 starts at Nobody (index 0)
+	2: 7,   # Act 2 starts at Popular (index 7, 10k followers)
+	3: 14   # Act 3 starts at Sensation (index 14, 2.5M followers)
+}
+
+
+func get_follower_rank_index() -> int:
+	## Get the rank index (0-22) based on follower count
+	for i in range(FOLLOWER_RANK_THRESHOLDS.size() - 1, -1, -1):
+		if followers >= FOLLOWER_RANK_THRESHOLDS[i]:
+			return i
+	return 0
+
+
+func get_follower_rank() -> String:
+	## Get the rank name based on follower count
+	return FOLLOWER_RANK_NAMES[get_follower_rank_index()]
+
+
+func get_follower_act() -> int:
+	## Get which act the character is in (1, 2, or 3)
+	var rank_index := get_follower_rank_index()
+	if rank_index >= ACT_BOUNDARIES[3]:
+		return 3
+	elif rank_index >= ACT_BOUNDARIES[2]:
+		return 2
+	return 1
+
+
+func get_next_rank_threshold() -> int:
+	## Get the follower count needed for next rank, or -1 if at max
+	var rank_index := get_follower_rank_index()
+	if rank_index >= FOLLOWER_RANK_THRESHOLDS.size() - 1:
+		return -1  # Already at max rank
+	return FOLLOWER_RANK_THRESHOLDS[rank_index + 1]
+
+
+func get_next_rank_name() -> String:
+	## Get the name of the next rank, or empty string if at max
+	var rank_index := get_follower_rank_index()
+	if rank_index >= FOLLOWER_RANK_NAMES.size() - 1:
+		return ""
+	return FOLLOWER_RANK_NAMES[rank_index + 1]
+
+
+func get_rank_progress() -> float:
+	## Get progress toward next rank as 0.0-1.0
+	var rank_index := get_follower_rank_index()
+	if rank_index >= FOLLOWER_RANK_THRESHOLDS.size() - 1:
+		return 1.0  # At max rank
+
+	var current_threshold: int = FOLLOWER_RANK_THRESHOLDS[rank_index]
+	var next_threshold: int = FOLLOWER_RANK_THRESHOLDS[rank_index + 1]
+	var range_size: int = next_threshold - current_threshold
+	var progress: int = followers - current_threshold
+
+	return clampf(float(progress) / float(range_size), 0.0, 1.0)
+
+
+func format_followers() -> String:
+	## Format follower count for display (e.g., 1.5K, 2.3M, 1.2B)
+	if followers >= 1000000000:
+		return "%.1fB" % (followers / 1000000000.0)
+	elif followers >= 1000000:
+		return "%.1fM" % (followers / 1000000.0)
+	elif followers >= 1000:
+		return "%.1fK" % (followers / 1000.0)
+	return str(followers)
+
+
+# =============================================================================
 # BODY SIZE SYSTEM
 # =============================================================================
 
 ## Size tier thresholds (same for all body parts)
-const SIZE_TIER_THRESHOLDS := [0, 11, 26, 51, 81, 121]
+## Tiers 0-5: Normal gameplay, Tiers 6-8: Endgame (building to city scale)
+const SIZE_TIER_THRESHOLDS := [0, 11, 26, 51, 81, 121, 201, 351, 601]
 
 ## Belly tier labels
-const BELLY_TIER_LABELS := ["Flat", "Soft", "Pudgy", "Round", "Huge", "Immense"]
+const BELLY_TIER_LABELS := ["Flat", "Soft", "Pudgy", "Round", "Huge", "Immense", "Colossal", "Titanic", "Planetary"]
 
 ## Bust tier labels
-const BUST_TIER_LABELS := ["Modest", "Perky", "Full", "Heavy", "Massive", "Enormous"]
+const BUST_TIER_LABELS := ["Modest", "Perky", "Full", "Heavy", "Massive", "Enormous", "Colossal", "Titanic", "Planetary"]
 
 ## Hip tier labels (for future use)
-const HIP_TIER_LABELS := ["Narrow", "Average", "Wide", "Thick", "Massive", "Immense"]
+const HIP_TIER_LABELS := ["Narrow", "Average", "Wide", "Thick", "Massive", "Immense", "Colossal", "Titanic", "Planetary"]
 
 
 func get_fat_distribution() -> Dictionary:

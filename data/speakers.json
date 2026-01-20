@@ -1,0 +1,34 @@
+{
+	"speakers": {
+		"vex": {
+			"name": "Vex",
+			"portrait": "res://assets/portraits/vex_default.png",
+			"color": "#9966cc",
+			"typing_style": "lowercase"
+		},
+		"dr_dan": {
+			"name": "Dr. Dan",
+			"portrait": "res://assets/portraits/dr_dan_default.png",
+			"color": "#66cc66",
+			"typing_style": "normal"
+		},
+		"vendi": {
+			"name": "Vendi",
+			"portrait": "res://assets/portraits/vendi_default.png",
+			"color": "#66aadd",
+			"typing_style": "normal"
+		},
+		"recruiter": {
+			"name": "Recruiter",
+			"portrait": "res://assets/portraits/recruiter_default.png",
+			"color": "#ddaa66",
+			"typing_style": "normal"
+		},
+		"system": {
+			"name": "System",
+			"portrait": "",
+			"color": "#888888",
+			"typing_style": "normal"
+		}
+	}
+}

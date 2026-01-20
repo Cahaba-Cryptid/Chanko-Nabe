@@ -447,6 +447,7 @@ func _calculate_time_skip() -> int:
 
 	if _character:
 		var excess_weight := maxi(0, _character.weight - WEIGHT_THRESHOLD)
+		@warning_ignore("integer_division")
 		var weight_penalty := (excess_weight / WEIGHT_INCREMENT) * TIME_PER_INCREMENT
 		time_skip += weight_penalty
 

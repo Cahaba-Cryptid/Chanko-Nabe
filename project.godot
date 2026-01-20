@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 
 GameManager="*res://src/autoloads/game_manager.gd"
 TimeManager="*res://src/autoloads/time_manager.gd"
+DialogueManager="*res://src/autoloads/dialogue_manager.gd"
 
 [display]
 

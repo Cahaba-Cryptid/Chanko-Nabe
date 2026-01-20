@@ -241,9 +241,11 @@ func _update_preview() -> void:
 	var final_mult := quality_mult + extra_mult
 
 	# Duration increases with added items (scales with fill too)
+	@warning_ignore("integer_division")
 	var added_duration := added_fill / 5  # 1 min per 5 fill
 	var total_duration := base_duration + added_duration
 
+	@warning_ignore("integer_division")
 	var hours := total_duration / 60
 	var minutes := total_duration % 60
 	var time_str := "%dh %dm" % [hours, minutes] if hours > 0 else "%dm" % minutes
@@ -267,8 +269,10 @@ func _update_preview() -> void:
 
 func _update_hint() -> void:
 	if _is_holding:
+		@warning_ignore("narrowing_conversion")
 		var progress := mini(_hold_timer / HOLD_DURATION, 1.0)
 		var bar_length := 10
+		@warning_ignore("narrowing_conversion")
 		var filled := int(progress * bar_length)
 		var bar := "[" + "=".repeat(filled) + " ".repeat(bar_length - filled) + "]"
 		hint_label.text = "Starting stream... %s" % bar
@@ -553,6 +557,7 @@ func _start_stream() -> void:
 	var extra_mult := added_fill * 0.01
 
 	# Duration scales with fill: 1 min per 5 fill
+	@warning_ignore("integer_division")
 	var added_duration := added_fill / 5
 
 	var stream_data := {

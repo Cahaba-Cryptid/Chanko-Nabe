@@ -279,7 +279,7 @@ func get_character_count() -> int:
 
 func save_game(slot: int = 0) -> bool:
 	var save_data := {
-		"version": 3,
+		"version": 4,
 		"money": money,
 		"current_day": current_day,
 		"time": {
@@ -301,6 +301,7 @@ func save_game(slot: int = 0) -> bool:
 			"applicant_pool": applicant_pool,
 			"active_ads": active_ads
 		},
+		"dialogue": DialogueManager.get_save_data(),
 		"station_data": station_data,
 		"characters": []
 	}
@@ -380,6 +381,10 @@ func load_game(slot: int = 0) -> bool:
 		active_ads.append(ad)
 	applicant_pool_changed.emit()
 	ad_status_changed.emit()
+
+	# Load dialogue state
+	var dialogue_data: Dictionary = save_data.get("dialogue", {})
+	DialogueManager.load_save_data(dialogue_data)
 
 	# Load characters
 	var char_data_array: Array = save_data.get("characters", [])

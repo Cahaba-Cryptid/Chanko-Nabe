@@ -155,8 +155,10 @@ func _get_binge_time_preview() -> String:
 
 func _update_hint() -> void:
 	if _is_holding:
+		@warning_ignore("narrowing_conversion")
 		var progress := mini(_hold_timer / HOLD_DURATION, 1.0)
 		var bar_length := 10
+		@warning_ignore("narrowing_conversion")
 		var filled := int(progress * bar_length)
 		var bar := "[" + "=".repeat(filled) + " ".repeat(bar_length - filled) + "]"
 		hint_label.text = "Starting binge... %s" % bar
@@ -196,8 +198,6 @@ func _is_stomach_full_with_queue() -> bool:
 
 
 func _update_selection_visuals() -> void:
-	var food_items := _get_food_items_from_inventory()
-
 	# Update inventory list selection
 	var inv_children := inventory_list.get_children()
 	for i in range(inv_children.size()):

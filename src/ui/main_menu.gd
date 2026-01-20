@@ -5,7 +5,7 @@ class_name MainMenu
 signal start_new_game(slot: int, archetype_id: String)
 signal continue_game(slot: int)
 
-enum MenuMode { MAIN, DELETE_SLOT, CONFIRM_DELETE }
+enum MenuMode { MAIN, DELETE_SLOT, CONFIRM_DELETE, NO_SLOTS_WARNING }
 
 const SLOT_COUNT := 3
 const SAVE_PATH_TEMPLATE := "user://save_slot_%s.dat"
@@ -265,6 +265,8 @@ func _input(event: InputEvent) -> void:
 			_handle_delete_input(event)
 		MenuMode.CONFIRM_DELETE:
 			_handle_confirm_input(event)
+		MenuMode.NO_SLOTS_WARNING:
+			_handle_no_slots_input(event)
 
 
 func _handle_main_input(event: InputEvent) -> void:
@@ -386,7 +388,7 @@ func _show_no_slots_warning() -> void:
 	title_label.text = "No Empty Slots"
 	subtitle_label.text = "Delete a save to start a new game."
 	subtitle_label.show()
-	hint_label.text = "Press any key to return"
+	hint_label.text = "E/Q: Back to Menu"
 
 	# Clear options
 	for child in options_container.get_children():
@@ -398,12 +400,19 @@ func _show_no_slots_warning() -> void:
 	options_container.add_child(back_button)
 
 	_selected_index = 0
+	_mode = MenuMode.NO_SLOTS_WARNING
 
 	await get_tree().process_frame
 	_apply_selected_style(back_button)
 
-	# Temporarily change mode handling
-	_mode = MenuMode.MAIN  # Will use main input but only option is back
+
+func _handle_no_slots_input(event: InputEvent) -> void:
+	# Any accept or back action returns to main menu
+	if event.is_action_pressed("accept") or event.is_action_pressed("back"):
+		_mode = MenuMode.MAIN
+		_selected_index = 0
+		_update_display()
+		get_viewport().set_input_as_handled()
 
 
 func _delete_slot(slot_index: int) -> void:

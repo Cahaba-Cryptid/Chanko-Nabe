@@ -392,7 +392,7 @@ func _on_period_changed(_period: String) -> void:
 	_update_period_display()
 
 
-func _on_game_paused(is_paused: bool) -> void:
+func _on_game_paused(_is_paused: bool) -> void:
 	# Reset flash state when pause changes
 	_pause_flash_timer = 0.0
 	_pause_show_time = false  # Start by showing "Paused"
