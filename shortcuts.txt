@@ -1,0 +1,21 @@
+================================================================================
+CHANKO NABE - Controls
+================================================================================
+
+GAME CONTROLS
+-------------
+Arrow Keys / WASD   Navigate menus
+E                   Select / Accept
+Q                   Back / Cancel
+Space               Pause game time
+Escape              Game menu (save/load, also pauses)
+
+================================================================================
+
+DEBUG SHORTCUTS (editor only)
+-----------------------------
+F1                  Add $100
+F3                  Double time speed
+F4                  Halve time speed
+
+================================================================================

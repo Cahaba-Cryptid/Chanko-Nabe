@@ -1,0 +1,116 @@
+[gd_scene load_steps=3 format=3 uid="uid://streamsetup001"]
+
+[ext_resource type="Script" path="res://src/ui/stream_setup_dialog.gd" id="1_script"]
+[ext_resource type="Theme" path="res://theme/game_theme.tres" id="2_theme"]
+
+[node name="StreamSetupDialog" type="PanelContainer"]
+theme = ExtResource("2_theme")
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -200.0
+offset_right = 300.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 15
+
+[node name="VBox" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Character - Stream Setup"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/VBox"]
+layout_mode = 2
+
+[node name="HBox" type="HBoxContainer" parent="MarginContainer/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 15
+
+[node name="KitsPanel" type="VBoxContainer" parent="MarginContainer/VBox/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="KitsLabel" type="Label" parent="MarginContainer/VBox/HBox/KitsPanel"]
+layout_mode = 2
+text = "Stream Kits"
+horizontal_alignment = 1
+
+[node name="KitsScroll" type="ScrollContainer" parent="MarginContainer/VBox/HBox/KitsPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="KitsList" type="VBoxContainer" parent="MarginContainer/VBox/HBox/KitsPanel/KitsScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="InventoryPanel" type="VBoxContainer" parent="MarginContainer/VBox/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="InventoryLabel" type="Label" parent="MarginContainer/VBox/HBox/InventoryPanel"]
+layout_mode = 2
+text = "Add from Inventory"
+horizontal_alignment = 1
+
+[node name="InventoryScroll" type="ScrollContainer" parent="MarginContainer/VBox/HBox/InventoryPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="InventoryList" type="VBoxContainer" parent="MarginContainer/VBox/HBox/InventoryPanel/InventoryScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="QueuePanel" type="VBoxContainer" parent="MarginContainer/VBox/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="QueueLabel" type="Label" parent="MarginContainer/VBox/HBox/QueuePanel"]
+layout_mode = 2
+text = "Stream Content"
+horizontal_alignment = 1
+
+[node name="QueueScroll" type="ScrollContainer" parent="MarginContainer/VBox/HBox/QueuePanel"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="QueueList" type="VBoxContainer" parent="MarginContainer/VBox/HBox/QueuePanel/QueueScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="HSeparator2" type="HSeparator" parent="MarginContainer/VBox"]
+layout_mode = 2
+
+[node name="PreviewLabel" type="Label" parent="MarginContainer/VBox"]
+layout_mode = 2
+text = "Kit: $0 | Time: 2h | Quality: 1.0x | Stomach: 0/100 -> 0"
+horizontal_alignment = 1
+
+[node name="HintLabel" type="Label" parent="MarginContainer/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+theme_override_font_sizes/font_size = 11
+text = "Up/Down: Select Kit | Right: Add Items | Hold V: Start | Q: Back"
+horizontal_alignment = 1

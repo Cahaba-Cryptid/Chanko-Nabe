@@ -1,0 +1,125 @@
+{
+  "kits": [
+    {
+      "id": "standard_stream",
+      "name": "Standard Stream",
+      "description": "Basic streaming setup. Just you and the camera.",
+      "price": 0,
+      "milk_price": 0,
+      "base_duration": 120,
+      "quality_multiplier": 1.0,
+      "contents": []
+    },
+    {
+      "id": "snack_stream",
+      "name": "Snack Stream",
+      "description": "Light eating content. Rice balls and drinks.",
+      "price": 25,
+      "milk_price": 0,
+      "base_duration": 150,
+      "quality_multiplier": 1.3,
+      "contents": [
+        {"id": "rice_ball", "quantity": 3},
+        {"id": "energy_drink", "quantity": 2}
+      ]
+    },
+    {
+      "id": "mukbang_basic",
+      "name": "Mukbang Basic",
+      "description": "Entry-level eating stream. Bento and sides.",
+      "price": 50,
+      "milk_price": 0,
+      "base_duration": 180,
+      "quality_multiplier": 1.5,
+      "contents": [
+        {"id": "bento_standard", "quantity": 2},
+        {"id": "milkshake", "quantity": 1},
+        {"id": "pudding", "quantity": 2}
+      ]
+    },
+    {
+      "id": "mukbang_deluxe",
+      "name": "Mukbang Deluxe",
+      "description": "Premium eating content. Viewers love variety.",
+      "price": 100,
+      "milk_price": 0,
+      "base_duration": 240,
+      "quality_multiplier": 1.8,
+      "contents": [
+        {"id": "bento_deluxe", "quantity": 2},
+        {"id": "katsu_don", "quantity": 1},
+        {"id": "cheesecake", "quantity": 2},
+        {"id": "protein_shake", "quantity": 2}
+      ]
+    },
+    {
+      "id": "stuffing_stream",
+      "name": "Stuffing Stream",
+      "description": "Hardcore content. Push those limits.",
+      "price": 150,
+      "milk_price": 0,
+      "base_duration": 300,
+      "quality_multiplier": 2.2,
+      "contents": [
+        {"id": "mega_burger", "quantity": 2},
+        {"id": "family_pack", "quantity": 1},
+        {"id": "parfait", "quantity": 2},
+        {"id": "milkshake", "quantity": 3}
+      ]
+    },
+    {
+      "id": "extreme_challenge",
+      "name": "Extreme Challenge",
+      "description": "The big leagues. Massive quantities, massive payoff.",
+      "price": 250,
+      "milk_price": 0,
+      "base_duration": 360,
+      "quality_multiplier": 3.0,
+      "contents": [
+        {"id": "party_platter", "quantity": 1},
+        {"id": "challenge_bowl", "quantity": 1},
+        {"id": "mega_burger", "quantity": 2},
+        {"id": "protein_shake", "quantity": 4}
+      ]
+    },
+    {
+      "id": "milking_stream",
+      "name": "Milking Stream",
+      "description": "Live milking session. Niche but profitable.",
+      "price": 0,
+      "milk_price": 50,
+      "base_duration": 180,
+      "quality_multiplier": 1.6,
+      "requires_lactating": true,
+      "contents": []
+    },
+    {
+      "id": "cream_mukbang",
+      "name": "Cream Mukbang",
+      "description": "Self-supplied dairy content. Very popular with certain viewers.",
+      "price": 0,
+      "milk_price": 100,
+      "base_duration": 240,
+      "quality_multiplier": 2.0,
+      "requires_lactating": true,
+      "contents": [
+        {"id": "pudding", "quantity": 2},
+        {"id": "parfait", "quantity": 2}
+      ]
+    },
+    {
+      "id": "hucow_special",
+      "name": "Hucow Special",
+      "description": "The full experience. Milking, drinking, and more.",
+      "price": 0,
+      "milk_price": 200,
+      "base_duration": 300,
+      "quality_multiplier": 2.8,
+      "requires_lactating": true,
+      "contents": [
+        {"id": "protein_shake", "quantity": 3},
+        {"id": "cheesecake", "quantity": 2}
+      ]
+    }
+  ]
+}

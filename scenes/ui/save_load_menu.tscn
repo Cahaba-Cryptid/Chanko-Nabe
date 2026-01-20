@@ -1,0 +1,66 @@
+[gd_scene load_steps=3 format=3 uid="uid://dsaveloadmenu1"]
+
+[ext_resource type="Script" path="res://src/ui/save_load_menu.gd" id="1_script"]
+[ext_resource type="Theme" path="res://theme/game_theme.tres" id="2_theme"]
+
+[node name="SaveLoadMenu" type="PanelContainer"]
+theme = ExtResource("2_theme")
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -180.0
+offset_right = 200.0
+offset_bottom = 180.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Game Menu"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/VBox"]
+layout_mode = 2
+
+[node name="MainOptionsContainer" type="VBoxContainer" parent="MarginContainer/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="SlotsContainer" type="VBoxContainer" parent="MarginContainer/VBox"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="ConfirmContainer" type="VBoxContainer" parent="MarginContainer/VBox"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="HintLabel" type="Label" parent="MarginContainer/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+theme_override_font_sizes/font_size = 12
+text = "Arrow Keys: Navigate | E: Select | Esc: Resume"
+horizontal_alignment = 1

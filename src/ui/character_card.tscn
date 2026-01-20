@@ -1,0 +1,61 @@
+[gd_scene load_steps=3 format=3 uid="uid://bwx2r8m7qp3ct"]
+
+[ext_resource type="Script" path="res://src/ui/character_card.gd" id="1_card"]
+[ext_resource type="Theme" path="res://theme/game_theme.tres" id="2_theme"]
+
+[node name="CharacterCard" type="PanelContainer"]
+theme = ExtResource("2_theme")
+custom_minimum_size = Vector2(150, 200)
+script = ExtResource("1_card")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="Portrait" type="TextureRect" parent="VBox"]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 2
+size_flags_horizontal = 4
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="VBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Character Name"
+horizontal_alignment = 1
+
+[node name="StatsContainer" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+
+[node name="LevelLabel" type="Label" parent="VBox/StatsContainer"]
+layout_mode = 2
+text = "Lv.1"
+
+[node name="Spacer" type="Control" parent="VBox/StatsContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="MoodBar" type="ProgressBar" parent="VBox/StatsContainer"]
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+max_value = 100.0
+value = 75.0
+show_percentage = false
+
+[node name="EnergyBar" type="ProgressBar" parent="VBox/StatsContainer"]
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="StatusLabel" type="Label" parent="VBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Available"
+horizontal_alignment = 1
+
+[node name="AssignButton" type="Button" parent="VBox"]
+layout_mode = 2
+text = "Assign"

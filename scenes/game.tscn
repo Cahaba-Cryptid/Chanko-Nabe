@@ -1,0 +1,28 @@
+[gd_scene load_steps=6 format=3 uid="uid://dgamescene001"]
+
+[ext_resource type="Script" path="res://scenes/game.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://dmainmenu001" path="res://src/ui/main_menu.tscn" id="2_mainmenu"]
+[ext_resource type="PackedScene" uid="uid://c0wac4jfw6081" path="res://src/ui/archetype_selection.tscn" id="3_archetype"]
+[ext_resource type="PackedScene" uid="uid://dw8y6m2kscl4e" path="res://src/ui/main_screen.tscn" id="4_mainscreen"]
+[ext_resource type="Theme" path="res://theme/game_theme.tres" id="5_theme"]
+
+[node name="Game" type="Node"]
+script = ExtResource("1_script")
+
+[node name="MainMenu" parent="." instance=ExtResource("2_mainmenu")]
+
+[node name="ArchetypeSelection" parent="." instance=ExtResource("3_archetype")]
+visible = false
+
+[node name="Gameplay" type="Control" parent="."]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("5_theme")
+
+[node name="MainScreen" parent="Gameplay" instance=ExtResource("4_mainscreen")]
+layout_mode = 1

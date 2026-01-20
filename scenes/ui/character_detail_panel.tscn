@@ -1,0 +1,55 @@
+[gd_scene load_steps=3 format=3 uid="uid://detail_panel_001"]
+
+[ext_resource type="Script" path="res://src/ui/character_detail_panel.gd" id="1_script"]
+[ext_resource type="Theme" path="res://theme/game_theme.tres" id="2_theme"]
+
+[node name="CharacterDetailPanel" type="Control"]
+theme = ExtResource("2_theme")
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Panel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="Panel"]
+layout_mode = 2
+
+[node name="Header" type="HBoxContainer" parent="Panel/VBox"]
+layout_mode = 2
+
+[node name="Portrait" type="TextureRect" parent="Panel/VBox/Header"]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="Panel/VBox/Header"]
+layout_mode = 2
+size_flags_vertical = 1
+theme_override_font_sizes/font_size = 20
+text = "Character Name"
+
+[node name="Content" type="HBoxContainer" parent="Panel/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="StatsContainer" type="VBoxContainer" parent="Panel/VBox/Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HSeparator" type="HSeparator" parent="Panel/VBox"]
+layout_mode = 2
+
+[node name="TabsContainer" type="HBoxContainer" parent="Panel/VBox"]
+layout_mode = 2
+alignment = 1

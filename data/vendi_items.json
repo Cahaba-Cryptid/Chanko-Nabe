@@ -1,0 +1,184 @@
+{
+  "items": [
+    {
+      "id": "rice_ball",
+      "name": "Rice Ball",
+      "description": "Simple onigiri. Quick snack.",
+      "price": 5,
+      "fill": 10,
+      "eat_time": 10,
+      "category": "snack",
+      "image": ""
+    },
+    {
+      "id": "instant_ramen",
+      "name": "Instant Ramen",
+      "description": "Cup noodles. Hot and salty.",
+      "price": 5,
+      "fill": 15,
+      "eat_time": 10,
+      "category": "snack",
+      "image": ""
+    },
+    {
+      "id": "melon_bread",
+      "name": "Melon Bread",
+      "description": "Sweet bread with crispy crust.",
+      "price": 5,
+      "fill": 12,
+      "eat_time": 10,
+      "category": "snack",
+      "image": ""
+    },
+    {
+      "id": "egg_sandwich",
+      "name": "Egg Sandwich",
+      "description": "Konbini classic. Soft and filling.",
+      "price": 10,
+      "fill": 18,
+      "eat_time": 10,
+      "category": "snack",
+      "image": ""
+    },
+    {
+      "id": "bento_standard",
+      "name": "Standard Bento",
+      "description": "Rice, meat, pickles. Balanced meal.",
+      "price": 15,
+      "fill": 30,
+      "eat_time": 20,
+      "category": "meal",
+      "image": ""
+    },
+    {
+      "id": "bento_deluxe",
+      "name": "Deluxe Bento",
+      "description": "Premium ingredients. Extra portions.",
+      "price": 20,
+      "fill": 45,
+      "eat_time": 30,
+      "category": "meal",
+      "image": ""
+    },
+    {
+      "id": "curry_rice",
+      "name": "Curry Rice",
+      "description": "Hearty curry over rice. Comfort food.",
+      "price": 15,
+      "fill": 35,
+      "eat_time": 20,
+      "category": "meal",
+      "image": ""
+    },
+    {
+      "id": "katsu_don",
+      "name": "Katsu Don",
+      "description": "Fried cutlet on rice. Heavy.",
+      "price": 20,
+      "fill": 40,
+      "eat_time": 20,
+      "category": "meal",
+      "image": ""
+    },
+    {
+      "id": "mega_burger",
+      "name": "Mega Burger",
+      "description": "Triple patty, extra cheese. Massive.",
+      "price": 30,
+      "fill": 50,
+      "eat_time": 30,
+      "category": "meal",
+      "image": ""
+    },
+    {
+      "id": "protein_shake",
+      "name": "Protein Shake",
+      "description": "Thick and creamy. Gains.",
+      "price": 10,
+      "fill": 20,
+      "eat_time": 10,
+      "category": "drink",
+      "image": ""
+    },
+    {
+      "id": "energy_drink",
+      "name": "Energy Drink",
+      "description": "Caffeine and sugar rush.",
+      "price": 5,
+      "fill": 8,
+      "eat_time": 10,
+      "category": "drink",
+      "image": ""
+    },
+    {
+      "id": "milkshake",
+      "name": "Milkshake",
+      "description": "Thick vanilla shake. 1200 calories.",
+      "price": 10,
+      "fill": 22,
+      "eat_time": 10,
+      "category": "drink",
+      "image": ""
+    },
+    {
+      "id": "pudding",
+      "name": "Pudding Cup",
+      "description": "Caramel custard. Sweet treat.",
+      "price": 5,
+      "fill": 12,
+      "eat_time": 10,
+      "category": "dessert",
+      "image": ""
+    },
+    {
+      "id": "cheesecake",
+      "name": "Cheesecake Slice",
+      "description": "Rich and creamy. Indulgent.",
+      "price": 10,
+      "fill": 25,
+      "eat_time": 10,
+      "category": "dessert",
+      "image": ""
+    },
+    {
+      "id": "parfait",
+      "name": "Fruit Parfait",
+      "description": "Layers of cream, fruit, granola.",
+      "price": 15,
+      "fill": 28,
+      "eat_time": 10,
+      "category": "dessert",
+      "image": ""
+    },
+    {
+      "id": "family_pack",
+      "name": "Family Pack",
+      "description": "Assorted snacks. Meant for four.",
+      "price": 40,
+      "fill": 65,
+      "eat_time": 40,
+      "category": "bulk",
+      "image": ""
+    },
+    {
+      "id": "party_platter",
+      "name": "Party Platter",
+      "description": "Sushi, fried food, sides. Feeds a crowd.",
+      "price": 65,
+      "fill": 85,
+      "eat_time": 50,
+      "category": "bulk",
+      "image": ""
+    },
+    {
+      "id": "challenge_bowl",
+      "name": "Challenge Bowl",
+      "description": "3kg of ramen. Free if finished.",
+      "price": 50,
+      "fill": 100,
+      "eat_time": 60,
+      "category": "special",
+      "image": ""
+    }
+  ]
+}

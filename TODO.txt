@@ -1,0 +1,400 @@
+================================================================================
+CHANKO NABE - Project Tracker
+================================================================================
+
+A dystopian management simulation where you manage streamers under a CammTec
+license, juggling quotas, debt, and survival. Failure means off-world mining.
+
+================================================================================
+MVP - CORE FEATURES
+================================================================================
+
+[X] Core Systems
+	[X] Game Manager (singleton/autoload)
+	[X] Time system (10-minute increments, shifts, days, weeks)
+	[X] Save/Load system (JSON-based)
+	[X] Currency/Economy system (1:1 ratio, round down to $5, CammTec 40% cut)
+	[X] Activity log (scrollable, last 10 entries)
+	[X] News ticker (Zone 3, rotating CammTec messages)
+
+[X] Character System
+	[X] Character data resource (CharacterData)
+		- Stats: charm, talent, stamina, style (0-100)
+		- Physical: weight, stomach_capacity, stomach_fullness, womb_capacity, bb_factor
+		- State: mood, energy, fatigue, experience, level
+		- Economy: daily_salary, total_earnings
+		- Inventory: Array of purchased items with quantities
+		- Helper functions: get_portrait_tier(), get_mood_text(), is_exhausted()
+	[X] Hunger/Mood/Fatigue system
+		- Empty stomach (fullness 0) drains mood over time
+		- Low mood (below 20) causes fatigue to build
+		- Fatigue at 100 = exhausted, can't work or binge
+		- Eating restores mood when below neutral
+		- Good mood slowly reduces fatigue
+	[X] Exhaustion recovery penalties
+		- Exhausted characters can ONLY use Relax station
+		- Starting Relax while exhausted triggers burnout:
+			- Lose 10% of followers
+			- -15 charm penalty for 3 days
+		- Non-Relax stations greyed out for exhausted characters
+	[X] Player character (low stats, no salary, time skips on assignment)
+	[X] Character roster management
+	[X] Pregnancy status display (detail panel shows pregnancy status based on BB Factor)
+	[ ] Character progression (activity-based stat training)
+	[X] Archetype system (core implementation)
+		- data/archetypes.json with all archetype definitions
+		- CharacterData updated with archetype_id, license_number
+		- get_effectiveness() uses archetype stat weights
+		- Save/load includes archetype fields
+		- Archetypes with stat weights (charm/talent/stamina/style):
+			- Glutton: 0.2/0.3/0.4/0.1 - eating content, capacity training
+				- Passives: +25% capacity training chance, -10% weight gain
+			- Broodmother: 0.4/0.1/0.3/0.2 - surrogacy, pregnancy income
+				- Passives: +1 base womb capacity, +15% surrogacy income
+			- E-Girl: 0.4/0.1/0.1/0.4 - followers, social
+				- Passives: -25% follower decay, +20% socializing gains
+			- Cybergoth: 0.1/0.3/0.2/0.4 - augments, endurance
+				- Passives: -20% energy drain, +50% augment effects, -15% augment costs, -30% follower decay
+			- Hucow: 0.35/0.15/0.35/0.15 - milk production, breeding
+				- Passives: always lactating, +25% milk production, +15% milk value
+			- Licensee: 0.3/0.4/0.1/0.2 - management only
+				- Passives: -10% NPC salaries, +10% NPC effectiveness, no personal content
+	[X] Archetype passive effects (apply bonuses in game systems)
+		- Glutton: +25% capacity training chance, -10% weight gain (in _complete_binge_task)
+		- Broodmother: +1 womb capacity at creation, +15% surrogacy income (stream income with BB factor)
+		- E-Girl: -25% follower decay, +20% socializing gains
+		- Cybergoth: -20% energy drain (all task completions), -30% follower decay
+		- Hucow: +25% milk production (already in _process_milk_production), +15% milk value (stream_setup_dialog)
+		- Licensee: -10% NPC salaries, +10% NPC effectiveness
+		- Pregnancy income bonus: +10% per BB factor (all archetypes), Broodmother gets +15% on top
+		- Augment categories: cybernetic vs genetic (augment_category field in JSON)
+		- Cybergoth: -15% cybernetic cost, +50% cybernetic stat gains
+		- Broodmother: -15% genetic cost, +50% genetic stat gains
+	[X] Archetype selection screen (game start)
+		- Starting conditions:
+			- Licensee: $2000, 1 starting NPC
+			- Performers (all others): $750, 0 NPCs
+		- Idle NPC warning (skippable) when performer assigns self while NPCs available
+	[X] Zone 2 UI update for archetypes
+		- Licensee players: separate "[LICENSE #XXXX]" section above TALENT
+		- License number randomized per save file (4 digits)
+		- Non-Licensee players: appear in TALENT roster normally
+	[X] Main Menu screen
+		- New Game, Continue, Delete Save, Options (placeholder)
+		- Continue only shows if save exists
+		- New Game warns if all 3 slots are full
+	[X] Auto-save system
+		- Auto-saves at the start of each new day
+		- Saves to current slot
+	[X] Escape menu "Return to Main Menu" option
+		- Saves game before returning
+		- Confirmation dialog
+	[/] Milk production system
+		- [X] Stats: milk_capacity, milk_current, is_lactating in CharacterData
+		- [X] Lactation triggers: Hucow archetype, pregnant (BB > 0), lactation augment
+		- [X] Milk currency for stream kits (milking_stream, cream_mukbang, hucow_special)
+		- [X] Production rate scales with weight, fullness, BB factor
+		- [X] Milk uses:
+			- Store: accumulates in milk_current up to milk_capacity
+			- Consume: drink milk as food (fills stomach)
+			- Currency: spend milk to purchase stream kits in pre-stream UI
+		- [X] Overflow handling:
+			- 80% capacity: warning indicator in activity log
+			- 100% capacity: production pauses, discomfort timer starts
+			- Discomfort builds over time at 100% (milk_full_ticks)
+			- Discomfort causes mood penalty (-1 per tick at full)
+			- High discomfort (10+ ticks): energy drain
+			- Emergency self-milk: can clear milk anywhere but wastes it
+		- [X] UI indicator for milk warning/full state
+			- Sticky warnings pinned to top of activity log
+			- Yellow at 80%, orange when full, red at severe discomfort
+		- [ ] Milking station for proper milk extraction
+
+[X] Station System
+	[X] Cam Studio - Stream setup dialog with kits
+		- Stream kits: Standard (free), Snack, Mukbang Basic/Deluxe, Stuffing, Extreme
+		- Each kit has fixed contents, price, duration, and quality multiplier
+		- Can add inventory items for extra quality and content
+		- Income = (followers/100) * effectiveness * quality_multiplier
+		- Eating on stream fills stomach with reduced capacity training chance
+		- Weight gain from eating on stream
+	[X] Dr. Dan's Back-Alley Van - Shop with Vendi-style UI
+		- 3-column layout: Items, Details, Cart
+		- Up/Down to navigate, A/D to add/remove, Hold V to purchase
+		- Item types: infusions (IV drips), procedures, augments, contracts
+		- All treatments take minimum 60 minutes (character sits for duration)
+		- Procedures apply stat changes on completion
+		- Augments stored in character's augments array (unique, no duplicates)
+		- Surrogacy contracts increase BB Factor (limited by womb_capacity)
+		- Player: time skips immediately; NPCs: assigned to station with timer
+	[X] Vendi Shop - Player-only via Shop tab
+		- 3-column layout: Items, Details, Cart
+		- Left/Right to add/remove, Hold V to purchase
+		- Time skips based on weight (heavier = longer)
+		- Items added to character inventory
+		- Items JSON has "image" field for future pixel art
+	[X] Items Menu - Eat items from inventory
+		- Queue-based eating system
+		- Shows fill values and eat times
+		- Fills stomach, removes items, skips time
+	[X] Stats Panel - View character stats
+		- 2-column layout: Stats + Mood (left), Portrait (right)
+		- Portrait tier (1-4) based on fullness % and bb_factor
+		- Mood text with color coding
+	[X] Training Station - Covered by Binge (capacity training) and stream kits
+	[X] Personal Space - Covered by Relax station
+	[X] Assign character to station via keyboard menu
+	[X] Station slots (configurable per station, upgradable)
+	[X] Station occupancy display (e.g., "1/2")
+	[X] Full stations greyed out and unselectable
+	[X] Task countdown timers on character tokens
+	[X] Characters locked while assigned (greyed out, detail panel blocked)
+
+[X] Quota/Debt System
+	[X] Weekly quota (starts $10k, escalates 20% per week)
+	[X] 3-day grace period on missed quota
+	[X] Late fees ($500 base, +$500 per repeat offense)
+	[X] Game over triggers debt collection (off-world mining)
+	[X] Zone 3 UI: quota progress, days remaining, debt, grace warning
+	[X] Save/load includes quota state
+
+[ ] UI Layout (3-Zone System)
+	[X] Zone 1 (Bottom) - Side-view city block with stations
+	[X] Zone 2 (Top Right) - Streamer roster, menu-driven interaction
+	[X] Zone 3 (Top Left) - Money, date/time, days online, news, viewer counts
+	[X] Background - Dystopian cityscape (always visible)
+	[X] Keyboard-only navigation (Arrow/WASD, E=select, Q=back, Space=pause, Esc=menu)
+
+[/] Economy
+	[X] Streaming income (base * effectiveness, rounds down to $5)
+	[X] Feeding costs ($50 per binge session)
+	[ ] Character salary cuts (base % + modifiers)
+	[ ] Weekly payout cycle
+	[X] CammTec 40% cut on all streaming income
+
+================================================================================
+PHASE 2 - CONTENT
+================================================================================
+
+[X] Feeding System
+	[X] Feeding streams (via Cam Studio stream kits)
+		- Snack Stream, Mukbang Basic/Deluxe, Stuffing Stream, Extreme Challenge
+		- Kit contents consumed on stream, fills stomach
+		- Reduced capacity training chance (half of binge)
+	[X] Weight gain mechanics (1 lb per 50 fill consumed)
+	[X] Capacity training (25-50% chance when 75%+ full, +1-3 capacity)
+
+[/] Surrogacy System
+	[X] Womb capacity stat (limits max BB Factor)
+	[X] Standard contracts ($1000, 3 hrs, +1 BB Factor)
+	[X] Mercenary contracts ($3000, 6 hrs, +3 BB Factor)
+	[X] Contract stacking (limited by womb capacity)
+	[X] Hyperpregnant status (BB Factor > 4)
+	[ ] Trimester progression with earnings multipliers
+	[ ] Exclusive contracts (Tier 3)
+	[ ] 50% permanent weight retention after contract
+	[ ] Birth/delivery mechanics
+
+[X] Dr. Dan's Shop
+	[X] Basic shop UI (3-column Vendi-style)
+	[X] Augments (expensive, permanent upgrades)
+	[X] Infusions (IV drips, 60-90 min treatments)
+	[X] Procedures (stat boosts, 60-120 min)
+	[X] Surrogacy contracts (standard and mercenary)
+	[X] NPC assignment system (timer-based, effects on completion)
+	[ ] Item effect implementation (beyond stat changes)
+
+[ ] Recruitment System
+	[ ] Computer interface for posting ads
+	[ ] Ad quality tiers (budget/standard/premium)
+	[ ] Applicant pools with visible stats based on ad tier
+	[ ] Recruitment fees
+	[ ] Applicant expiration timer
+	[ ] Recruiter AI character (Vex's friend)
+
+[ ] Community Reputation
+	[ ] License/group ratings
+	[ ] Affects ad effectiveness, applicant quality, offer acceptance
+	[ ] Damaged by dumping streamers
+
+================================================================================
+PHASE 3 - EXPANSION
+================================================================================
+
+[ ] Vex Dialogue System
+	[ ] Visual novel-style overlay
+	[ ] Message triggers based on game events
+	[ ] Relationship arc progression (Week 1-3, 4-7, 8-10, 10+)
+	[ ] Compliance bonuses
+
+[ ] Eating Competitions
+	[ ] Event system (Days 2 and 5 of each week)
+	[ ] Entry fee ($200), prize pool ($2k for 1st)
+	[ ] Win/loss mechanics
+	[ ] Reputation damage on loss (-20% earnings for X days)
+
+[ ] Additional Characters
+	[ ] Dr. Dan personality development
+	[ ] Vendi AI character
+	[ ] Recruiter AI character
+
+================================================================================
+STRETCH GOALS
+================================================================================
+
+[ ] Visual Polish
+	[ ] Ambient activity in Zone 1 (pedestrians, vehicles)
+	[ ] Station animations
+	[ ] Character portrait variations
+
+[ ] Zone 3 Contextual Display
+	[ ] Updates based on current selection/state
+	[ ] Shows relevant info for highlighted character
+	[ ] Shows station details when assigning
+	[ ] Contextual news ticker
+
+[ ] News Ticker
+	[ ] Scrolling text in Zone 3
+	[ ] CammTec propaganda
+	[ ] Stories about failed creators
+	[ ] Off-world mining "opportunities"
+	[ ] Easter eggs referencing player actions
+
+[ ] Meta Features
+	[ ] Statistics tracking
+	[ ] Multiple endings based on performance
+	[ ] Achievements
+
+================================================================================
+COMPLETED
+================================================================================
+
+[X] Project structure set up
+[X] Game Manager autoload
+[X] Time Manager autoload (10-minute increments)
+[X] 3-zone UI layout implemented
+[X] Station buttons in Zone 1 (Cam Studio, Dr. Dan's, Contest, Socialize, Relax)
+[X] Test characters created (Maisy, Jun, Riko)
+[X] Player character (You) with low stats
+[X] Debug shortcuts (F1=money, F3/F4=time speed)
+[X] Keyboard-only navigation system
+[X] Character roster with selection highlighting (border style)
+[X] Character detail panel with stats and tabs
+[X] Station assignment flow (character → detail → assign → station)
+[X] Station slots and occupancy display
+[X] Task countdown timers
+[X] Assigned character locking (greyed out until task done)
+[X] Streaming income generation (base * effectiveness, rounded to $5)
+[X] Currency system (1:1 ratio, all values in $5 increments)
+[X] Activity log in Zone 2 (last 10 activities, scrollable)
+[X] News ticker in Zone 3 (scrolling CammTec messages)
+[X] Vendi Shop (3-column layout)
+	- Player-only via Shop tab in detail panel
+	- Items list, Details panel, Cart panel
+	- Left/Right arrows to add/remove from cart
+	- Hold V to purchase
+	- Time skips based on weight (heavier = longer shopping)
+	- Items stored in character inventory
+[X] Items Menu (eating system)
+	- Queue-based eating from inventory
+	- Shows fill values and eat times
+	- Fills stomach, removes items, skips time
+[X] Binge Station (hidden station via character detail menu)
+	- Food queue system - queue items from inventory
+	- Up/Down to select, A/D to remove/add to queue
+	- Hold V to start binge (Vendi-style controls)
+	- Time preview shows duration based on items queued
+	- Duration scales: base 60 min + 10 min per item
+	- Characters with food queued can't be assigned elsewhere
+	- Greyed out tabs when food is queued (only Binge available)
+	- Countdown timer displays on character token during binge
+[X] Stats Panel (2-column layout)
+	- Stats + Mood on left, Portrait on right
+	- Portrait tier (1-4) based on fullness and bb_factor
+	- Mood text with color coding
+[X] Character inventory system (stacking items by ID)
+[X] Time skip on player actions (player assignment skips time forward)
+[X] Dynamic tabs in detail panel (base tabs + player-only Shop tab)
+[X] BB factor stat for pregnancy level (0-4)
+[X] Weight stat affecting shopping time
+[X] Binge system (hidden station, Vendi-style controls)
+	- Food queue with stomach capacity limits
+	- Time preview and scaled duration
+	- Character lockout while food queued
+[X] Dr. Dan's Back-Alley Van (Vendi-style shop)
+	- 3-column layout: Items, Details, Order
+	- Infusions (IV drips), Procedures, Augments, Contracts
+	- All treatments require 60+ minutes (character sits for duration)
+	- Player: time skips immediately with effects applied
+	- NPCs: assigned to "Dr. Dan's" station with timer, effects on completion
+	- Surrogacy contracts: Standard (+1 BB, 3hr), Mercenary (+3 BB, 6hr)
+	- Contract purchases limited by womb_capacity
+	- Green-tinted UI to differentiate from Vendi
+[X] Hold Q to close all menus (global shortcut)
+[X] Pregnancy status display in character detail panel
+	- Single, Twins, Triplets, Quads, Hyperpregnant (5+)
+	- Shows womb capacity stat
+[X] Follower system
+	- Followers determine stream income ($1 per 100 followers, min $10)
+	- Socializing gains followers (charm bonus)
+	- Follower decay at end of day (5% base, charm reduces)
+	- 1 day grace period before decay
+	- Ticker displays follower counts for all characters
+[X] Hunger/Mood/Fatigue system
+	- Empty stomach drains mood (1 per tick)
+	- Low mood (<20) builds fatigue (2 per tick)
+	- Fatigue at 100 = exhausted
+	- Good mood slowly recovers fatigue
+[X] Exhaustion recovery penalties
+	- Exhausted characters can ONLY use Relax station
+	- Burnout penalty: -10% followers, -15 charm for 3 days
+	- Non-Relax stations greyed out for exhausted characters
+	- Burnout status shown in detail panel
+[X] Capacity training system
+	- Binging at 75%+ fullness has 25-50% chance to increase stomach capacity
+	- Gain 1-3 capacity on success
+	- Weight gain: 1 lb per 50 fill consumed
+	- Activity log shows capacity/weight gains
+[X] Physical stats display in character detail panel
+	- Shows stomach fullness/capacity
+	- Shows weight in lbs
+[X] Stream Setup System (Cam Studio rework)
+	- Pre-stream dialog to select kit and add items
+	- Stream kits with fixed contents and quality multipliers:
+		- Standard (free, 1.0x), Snack ($25, 1.3x), Mukbang Basic ($50, 1.5x)
+		- Mukbang Deluxe ($100, 1.8x), Stuffing ($150, 2.2x), Extreme ($250, 3.0x)
+	- Add inventory items for +0.01x quality per fill point (100 fill = +1.0x)
+	- Food consumed on stream fills stomach
+	- Reduced capacity training (half chance of binge, +1-2 capacity)
+	- Followers gained based on quality multiplier
+	- 3-column UI: Kits, Add from Inventory, Stream Content
+[X] Save/Load System
+	- JSON-based saves to user://save_X.json
+	- Saves: money, day, time, station upgrades, all character data
+	- Functions: save_game(slot), load_game(slot), has_save(slot), delete_save(slot)
+[X] Economy - CammTec Cut & Feeding Costs
+	- CammTec takes 40% of all streaming income
+	- $50 feeding cost per binge session
+	- Income shown after cut in activity log
+[X] Quota/Debt System
+	- Starting debt: $25,000
+	- Week 1 quota: $10k, escalates 20% per week
+	- Tracks NET earnings (player's cut after CammTec 40%)
+	- Meeting quota applies payment to debt, excess kept
+	- Missing quota: 3-day grace period + late fee ($500 base, +$500 per repeat)
+	- Grace success: pay shortfall+fee, advance week
+	- Grace failure: game over (save deleted)
+	- Zone 3 UI: quota progress with color coding, debt display, grace warning
+	- Save/load includes all quota state variables
+[X] Theme System
+	- Global theme resource (theme/game_theme.tres)
+	- ThemeColors class for script access (theme/theme_colors.gd)
+	- Applied to root UI nodes for easy reskinning
+
+================================================================================
+KNOWN ISSUES / BUGS
+================================================================================
+
+(none currently)
+
+================================================================================

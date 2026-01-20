@@ -1,0 +1,141 @@
+[gd_scene load_steps=3 format=3 uid="uid://items_menu_001"]
+
+[ext_resource type="Script" path="res://src/ui/items_menu.gd" id="1_script"]
+[ext_resource type="Theme" path="res://theme/game_theme.tres" id="2_theme"]
+
+[node name="ItemsMenu" type="Control"]
+theme = ExtResource("2_theme")
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Dimmer" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.7)
+
+[node name="Panel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -250.0
+offset_right = 300.0
+offset_bottom = 250.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Header" type="VBoxContainer" parent="Panel/VBox"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="Panel/VBox/Header"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "INVENTORY"
+horizontal_alignment = 1
+
+[node name="CharacterLabel" type="Label" parent="Panel/VBox/Header"]
+layout_mode = 2
+text = "Character Name"
+horizontal_alignment = 1
+
+[node name="StomachLabel" type="Label" parent="Panel/VBox/Header"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Stomach: 0/100"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="Panel/VBox"]
+layout_mode = 2
+
+[node name="ColumnHeaders" type="HBoxContainer" parent="Panel/VBox"]
+layout_mode = 2
+
+[node name="ItemHeader" type="Label" parent="Panel/VBox/ColumnHeaders"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+text = "  Item"
+
+[node name="FillHeader" type="Label" parent="Panel/VBox/ColumnHeaders"]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+text = "Fill"
+
+[node name="TimeHeader" type="Label" parent="Panel/VBox/ColumnHeaders"]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+text = "Time"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Panel/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="ItemsContainer" type="VBoxContainer" parent="Panel/VBox/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 4
+
+[node name="HSeparator2" type="HSeparator" parent="Panel/VBox"]
+layout_mode = 2
+
+[node name="Footer" type="VBoxContainer" parent="Panel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="DescriptionLabel" type="Label" parent="Panel/VBox/Footer"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+text = "Select items to eat."
+autowrap_mode = 2
+
+[node name="CartSeparator" type="HSeparator" parent="Panel/VBox/Footer"]
+layout_mode = 2
+
+[node name="CartSection" type="VBoxContainer" parent="Panel/VBox/Footer"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="CartLabel" type="Label" parent="Panel/VBox/Footer/CartSection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "To Eat: Nothing"
+
+[node name="CartFillLabel" type="Label" parent="Panel/VBox/Footer/CartSection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(1.0, 0.85, 0.4, 1)
+text = "Fill: +0"
+
+[node name="TimeSkipLabel" type="Label" parent="Panel/VBox/Footer/CartSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.8, 0.6, 1)
+theme_override_font_sizes/font_size = 12
+text = "Time: +0 min"
+
+[node name="HintLabel" type="Label" parent="Panel/VBox/Footer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
+theme_override_font_sizes/font_size = 12
+text = "Up/Down Navigate   E Add to Meal   Space Eat   Q Close"
+horizontal_alignment = 1

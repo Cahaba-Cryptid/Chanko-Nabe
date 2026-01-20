@@ -1,0 +1,261 @@
+[gd_scene load_steps=5 format=3 uid="uid://dw8y6m2kscl4e"]
+
+[ext_resource type="Script" path="res://src/ui/main_screen.gd" id="1_main"]
+[ext_resource type="Texture2D" uid="uid://ct3447a73h0jo" path="res://assets/backgrounds/SmogFilledNightBackground.png" id="2_bg"]
+[ext_resource type="PackedScene" path="res://scenes/ui/character_detail_panel.tscn" id="3_detail"]
+[ext_resource type="Theme" path="res://theme/game_theme.tres" id="4_theme"]
+
+[node name="MainScreen" type="Control"]
+theme = ExtResource("4_theme")
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_main")
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_bg")
+stretch_mode = 6
+
+[node name="Zone3" type="PanelContainer" parent="."]
+layout_mode = 1
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 300.0
+offset_bottom = 200.0
+
+[node name="Zone3Content" type="MarginContainer" parent="Zone3"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBox" type="VBoxContainer" parent="Zone3/Zone3Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="MoneyLabel" type="Label" parent="Zone3/Zone3Content/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "$1,000"
+
+[node name="DayLabel" type="Label" parent="Zone3/Zone3Content/VBox"]
+layout_mode = 2
+text = "Day 1"
+
+[node name="TimeLabel" type="Label" parent="Zone3/Zone3Content/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "08:00"
+
+[node name="PeriodLabel" type="Label" parent="Zone3/Zone3Content/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+text = "Morning"
+
+[node name="HSeparator" type="HSeparator" parent="Zone3/Zone3Content/VBox"]
+layout_mode = 2
+
+[node name="QuotaSection" type="VBoxContainer" parent="Zone3/Zone3Content/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="QuotaHeaderLabel" type="Label" parent="Zone3/Zone3Content/VBox/QuotaSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+theme_override_font_sizes/font_size = 10
+text = "WEEK 1 QUOTA"
+
+[node name="QuotaProgressLabel" type="Label" parent="Zone3/Zone3Content/VBox/QuotaSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1.0, 0.85, 0.4, 1)
+text = "$0 / $10,000"
+
+[node name="QuotaDaysLabel" type="Label" parent="Zone3/Zone3Content/VBox/QuotaSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 12
+text = "7 days remaining"
+
+[node name="DebtLabel" type="Label" parent="Zone3/Zone3Content/VBox/QuotaSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.5, 0.5, 1)
+theme_override_font_sizes/font_size = 12
+text = "Debt: $25,000"
+
+[node name="GraceWarningLabel" type="Label" parent="Zone3/Zone3Content/VBox/QuotaSection"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.3, 0.3, 1)
+theme_override_font_sizes/font_size = 12
+text = "GRACE PERIOD: 3 days"
+
+[node name="Spacer" type="Control" parent="Zone3/Zone3Content/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="TickerClip" type="Control" parent="Zone3/Zone3Content/VBox"]
+clip_contents = true
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+
+[node name="TickerLabel" type="Label" parent="Zone3/Zone3Content/VBox/TickerClip"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -11.5
+offset_right = 800.0
+offset_bottom = 11.5
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.6, 0.8, 0.6, 1)
+theme_override_font_sizes/font_size = 12
+text = "CAMMTEC NEWS: Performance metrics are up 12% this quarter..."
+
+[node name="Zone2" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -300.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = 400.0
+grow_horizontal = 0
+
+[node name="Zone2Content" type="MarginContainer" parent="Zone2"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBox" type="VBoxContainer" parent="Zone2/Zone2Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="LicenseSection" type="VBoxContainer" parent="Zone2/Zone2Content/VBox"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="LicenseLabel" type="Label" parent="Zone2/Zone2Content/VBox/LicenseSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.75, 0.4, 1)
+theme_override_font_sizes/font_size = 14
+text = "[LICENSE #0000]"
+horizontal_alignment = 1
+
+[node name="LicenseTokenContainer" type="HBoxContainer" parent="Zone2/Zone2Content/VBox/LicenseSection"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="LicenseSeparator" type="HSeparator" parent="Zone2/Zone2Content/VBox/LicenseSection"]
+layout_mode = 2
+
+[node name="TalentLabel" type="Label" parent="Zone2/Zone2Content/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 12
+text = "TALENT"
+horizontal_alignment = 1
+
+[node name="CharactersContainer" type="HBoxContainer" parent="Zone2/Zone2Content/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="Zone2/Zone2Content/VBox"]
+layout_mode = 2
+
+[node name="ActivityScroll" type="ScrollContainer" parent="Zone2/Zone2Content/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="ActivityLog" type="VBoxContainer" parent="Zone2/Zone2Content/VBox/ActivityScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
+
+[node name="CharacterDetailPanel" parent="Zone2/Zone2Content" instance=ExtResource("3_detail")]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Zone1" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -220.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="Zone1Content" type="MarginContainer" parent="Zone1"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="StationsContainer" type="HBoxContainer" parent="Zone1/Zone1Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 40
+alignment = 1
+
+[node name="CamStudio" type="Button" parent="Zone1/Zone1Content/StationsContainer" groups=["stations"]]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+size_flags_vertical = 4
+text = "Cam Studio"
+
+[node name="DrDans" type="Button" parent="Zone1/Zone1Content/StationsContainer" groups=["stations"]]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+size_flags_vertical = 4
+text = "Dr. Dan's"
+
+[node name="Contest" type="Button" parent="Zone1/Zone1Content/StationsContainer" groups=["stations"]]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+size_flags_vertical = 4
+text = "Contest"
+
+[node name="Socialize" type="Button" parent="Zone1/Zone1Content/StationsContainer" groups=["stations"]]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+size_flags_vertical = 4
+text = "Socialize"
+
+[node name="Relax" type="Button" parent="Zone1/Zone1Content/StationsContainer" groups=["stations"]]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+size_flags_vertical = 4
+text = "Relax"
+
+[node name="Milking" type="Button" parent="Zone1/Zone1Content/StationsContainer" groups=["stations"]]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+size_flags_vertical = 4
+text = "Milking"

@@ -1,0 +1,117 @@
+{
+	"archetypes": [
+		{
+			"id": "glutton",
+			"name": "Glutton",
+			"description": "Eating content specialist. Excels at capacity training and mukbang streams.",
+			"stat_weights": {
+				"charm": 0.2,
+				"talent": 0.3,
+				"stamina": 0.4,
+				"style": 0.1
+			},
+			"passives": {
+				"capacity_training_bonus": 0.25,
+				"weight_gain_reduction": 0.10
+			},
+			"starting_money": 750,
+			"starting_npcs": 0,
+			"can_perform": true
+		},
+		{
+			"id": "broodmother",
+			"name": "Broodmother",
+			"description": "Surrogacy specialist. Higher womb capacity, better contract payouts, and enhanced genetic modifications.",
+			"stat_weights": {
+				"charm": 0.4,
+				"talent": 0.1,
+				"stamina": 0.3,
+				"style": 0.2
+			},
+			"passives": {
+				"base_womb_capacity_bonus": 1,
+				"surrogacy_income_bonus": 0.15,
+				"genetic_augment_cost_reduction": 0.15,
+				"genetic_augment_effect_bonus": 0.50
+			},
+			"starting_money": 750,
+			"starting_npcs": 0,
+			"can_perform": true
+		},
+		{
+			"id": "egirl",
+			"name": "E-Girl",
+			"description": "Social media expert. Builds and retains followers easily.",
+			"stat_weights": {
+				"charm": 0.4,
+				"talent": 0.1,
+				"stamina": 0.1,
+				"style": 0.4
+			},
+			"passives": {
+				"follower_decay_reduction": 0.25,
+				"socializing_bonus": 0.20
+			},
+			"starting_money": 750,
+			"starting_npcs": 0,
+			"can_perform": true
+		},
+		{
+			"id": "cybergoth",
+			"name": "Cybergoth",
+			"description": "Cybernetic-enhanced performer. Optimized implants for maximum efficiency.",
+			"stat_weights": {
+				"charm": 0.1,
+				"talent": 0.3,
+				"stamina": 0.2,
+				"style": 0.4
+			},
+			"passives": {
+				"energy_drain_reduction": 0.20,
+				"cybernetic_augment_effect_bonus": 0.50,
+				"cybernetic_augment_cost_reduction": 0.15,
+				"follower_decay_reduction": 0.30
+			},
+			"starting_money": 750,
+			"starting_npcs": 0,
+			"can_perform": true
+		},
+		{
+			"id": "hucow",
+			"name": "Hucow",
+			"description": "Milk production specialist. Always lactating with enhanced output.",
+			"stat_weights": {
+				"charm": 0.35,
+				"talent": 0.15,
+				"stamina": 0.35,
+				"style": 0.15
+			},
+			"passives": {
+				"always_lactating": true,
+				"milk_production_bonus": 0.25,
+				"milk_value_bonus": 0.15
+			},
+			"starting_money": 750,
+			"starting_npcs": 0,
+			"can_perform": true
+		},
+		{
+			"id": "licensee",
+			"name": "Licensee",
+			"description": "Management focused. Better NPC efficiency but cannot perform personally.",
+			"stat_weights": {
+				"charm": 0.3,
+				"talent": 0.4,
+				"stamina": 0.1,
+				"style": 0.2
+			},
+			"passives": {
+				"npc_salary_reduction": 0.10,
+				"npc_effectiveness_bonus": 0.10
+			},
+			"starting_money": 2000,
+			"starting_npcs": 1,
+			"can_perform": false
+		}
+	]
+}

@@ -1,0 +1,239 @@
+{
+  "items": [
+    {
+      "id": "energy_drip",
+      "name": "Energy IV Drip",
+      "description": "Nutrient cocktail administered intravenously. You'll feel refreshed.",
+      "price": 75,
+      "type": "infusion",
+      "effect": "+40 Energy",
+      "procedure_time": 60,
+      "image": ""
+    },
+    {
+      "id": "appetite_drip",
+      "name": "Appetite Enhancement Drip",
+      "description": "Hormone infusion that expands your hunger. Side effects include drooling.",
+      "price": 100,
+      "type": "infusion",
+      "effect": "+20 Stomach Capacity (temp)",
+      "procedure_time": 60,
+      "image": ""
+    },
+    {
+      "id": "mood_infusion",
+      "name": "Serotonin Infusion",
+      "description": "Liquid happiness, delivered directly to your bloodstream.",
+      "price": 125,
+      "type": "infusion",
+      "effect": "+50 Mood",
+      "procedure_time": 60,
+      "image": ""
+    },
+    {
+      "id": "recovery_drip",
+      "name": "Recovery Drip",
+      "description": "Post-binge special. Settles the stomach and clears the head.",
+      "price": 150,
+      "type": "infusion",
+      "effect": "Reduces Fullness, +30 Energy",
+      "procedure_time": 90,
+      "image": ""
+    },
+    {
+      "id": "performance_infusion",
+      "name": "Performance Infusion",
+      "description": "Temporary charm enhancement. The confidence is chemical.",
+      "price": 200,
+      "type": "infusion",
+      "effect": "+15 Charm (temp)",
+      "procedure_time": 90,
+      "image": ""
+    },
+    {
+      "id": "metabolism_slowdown",
+      "name": "Metabolism Slowdown",
+      "description": "Procedure to reduce calorie burn rate. More efficient storage.",
+      "price": 500,
+      "type": "procedure",
+      "effect": "-10% Calorie Burn",
+      "procedure_time": 90,
+      "stat_changes": {},
+      "image": ""
+    },
+    {
+      "id": "stomach_expansion",
+      "name": "Stomach Expansion",
+      "description": "Surgical procedure. More room for activities.",
+      "price": 800,
+      "type": "procedure",
+      "effect": "+25 Stomach Capacity",
+      "procedure_time": 120,
+      "stat_changes": {
+        "stomach_capacity": 25
+      },
+      "image": ""
+    },
+    {
+      "id": "stamina_treatment",
+      "name": "Stamina Treatment",
+      "description": "Gene therapy for enhanced endurance. Sit back and let it work.",
+      "price": 600,
+      "type": "procedure",
+      "effect": "+5 Stamina (perm)",
+      "procedure_time": 120,
+      "stat_changes": {
+        "stamina": 5
+      },
+      "image": ""
+    },
+    {
+      "id": "charm_injection",
+      "name": "Charm Treatment",
+      "description": "Pheromone gland enhancement. Subtle but effective.",
+      "price": 750,
+      "type": "procedure",
+      "effect": "+5 Charm (perm)",
+      "procedure_time": 90,
+      "stat_changes": {
+        "charm": 5
+      },
+      "image": ""
+    },
+    {
+      "id": "style_enhancement",
+      "name": "Style Enhancement",
+      "description": "Cosmetic procedures. Look your best. Takes a while to set.",
+      "price": 400,
+      "type": "procedure",
+      "effect": "+5 Style (perm)",
+      "procedure_time": 60,
+      "stat_changes": {
+        "style": 5
+      },
+      "image": ""
+    },
+    {
+      "id": "neural_talent_boost",
+      "name": "Neural Talent Boost",
+      "description": "Brain optimization therapy. Think faster, perform better.",
+      "price": 900,
+      "type": "procedure",
+      "effect": "+5 Talent (perm)",
+      "procedure_time": 120,
+      "stat_changes": {
+        "talent": 5
+      },
+      "image": ""
+    },
+    {
+      "id": "bb_factor_injection",
+      "name": "BB Factor Treatment",
+      "description": "Experimental hormone therapy. Results vary. Requires monitoring.",
+      "price": 1500,
+      "type": "procedure",
+      "effect": "+1 BB Factor",
+      "procedure_time": 120,
+      "stat_changes": {},
+      "image": ""
+    },
+    {
+      "id": "digestive_optimizer",
+      "name": "Digestive Optimizer",
+      "description": "Cybernetic implant. Process food more efficiently.",
+      "price": 2000,
+      "type": "augment",
+      "augment_category": "cybernetic",
+      "effect": "+50 Stomach Capacity",
+      "procedure_time": 180,
+      "stat_changes": {
+        "stomach_capacity": 50
+      },
+      "image": ""
+    },
+    {
+      "id": "adrenal_implant",
+      "name": "Adrenal Implant",
+      "description": "Never feel tired. Well, rarely. Major surgery required.",
+      "price": 2500,
+      "type": "augment",
+      "augment_category": "cybernetic",
+      "effect": "+15 Stamina, -50% Energy Drain",
+      "procedure_time": 180,
+      "stat_changes": {
+        "stamina": 15
+      },
+      "passive_effects": {
+        "energy_drain_reduction": 0.50
+      },
+      "image": ""
+    },
+    {
+      "id": "charisma_chip",
+      "name": "Charisma Chip",
+      "description": "Neural implant for social optimization. Lengthy installation.",
+      "price": 3000,
+      "type": "augment",
+      "augment_category": "cybernetic",
+      "effect": "+15 Charm (perm)",
+      "procedure_time": 240,
+      "stat_changes": {
+        "charm": 15
+      },
+      "image": ""
+    },
+    {
+      "id": "metabolism_regulator",
+      "name": "Metabolism Regulator",
+      "description": "Control your body's calorie processing. Complex implant.",
+      "price": 3500,
+      "type": "augment",
+      "augment_category": "cybernetic",
+      "effect": "Adjustable Weight Gain Rate",
+      "procedure_time": 240,
+      "passive_effects": {
+        "metabolism_control": true
+      },
+      "image": ""
+    },
+    {
+      "id": "genetic_resequence",
+      "name": "Genetic Resequence",
+      "description": "Complete genetic overhaul. Expensive, thorough, time-consuming.",
+      "price": 5000,
+      "type": "augment",
+      "augment_category": "genetic",
+      "effect": "+10 All Stats (perm)",
+      "procedure_time": 360,
+      "stat_changes": {
+        "charm": 10,
+        "talent": 10,
+        "stamina": 10,
+        "style": 10
+      },
+      "image": ""
+    },
+    {
+      "id": "standard_contract",
+      "name": "Standard Surrogacy Contract",
+      "description": "Basic surrogacy agreement. One fetus, standard compensation.",
+      "price": 1000,
+      "type": "contract",
+      "effect": "+1 BB Factor",
+      "procedure_time": 180,
+      "bb_factor_gain": 1,
+      "image": ""
+    },
+    {
+      "id": "mercenary_contract",
+      "name": "Mercenary Surrogacy Contract",
+      "description": "High-risk, high-reward surrogacy. Multiple fetuses, premium rates.",
+      "price": 3000,
+      "type": "contract",
+      "effect": "+3 BB Factor",
+      "procedure_time": 360,
+      "bb_factor_gain": 3,
+      "image": ""
+    }
+  ]
+}

@@ -1,0 +1,187 @@
+[gd_scene load_steps=3 format=3 uid="uid://stats_panel_001"]
+
+[ext_resource type="Script" path="res://src/ui/stats_panel.gd" id="1_script"]
+[ext_resource type="Theme" path="res://theme/game_theme.tres" id="2_theme"]
+
+[node name="StatsPanel" type="Control"]
+theme = ExtResource("2_theme")
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Dimmer" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.7)
+
+[node name="Panel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -350.0
+offset_top = -250.0
+offset_right = 350.0
+offset_bottom = 250.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 15
+
+[node name="HBox" type="HBoxContainer" parent="Panel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="LeftColumn" type="VBoxContainer" parent="Panel/MarginContainer/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="StatsPanel" type="PanelContainer" parent="Panel/MarginContainer/HBox/LeftColumn"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="StatsVBox" type="VBoxContainer" parent="Panel/MarginContainer/HBox/LeftColumn/StatsPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="StatsHeader" type="Label" parent="Panel/MarginContainer/HBox/LeftColumn/StatsPanel/StatsVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 14
+text = "STATS"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="Panel/MarginContainer/HBox/LeftColumn/StatsPanel/StatsVBox"]
+layout_mode = 2
+
+[node name="NameLabel" type="Label" parent="Panel/MarginContainer/HBox/LeftColumn/StatsPanel/StatsVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Character Name"
+
+[node name="LevelLabel" type="Label" parent="Panel/MarginContainer/HBox/LeftColumn/StatsPanel/StatsVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+text = "Level: 1"
+
+[node name="HSeparator2" type="HSeparator" parent="Panel/MarginContainer/HBox/LeftColumn/StatsPanel/StatsVBox"]
+layout_mode = 2
+
+[node name="CharmLabel" type="Label" parent="Panel/MarginContainer/HBox/LeftColumn/StatsPanel/StatsVBox"]
+layout_mode = 2
+text = "Charm: 50"
+
+[node name="TalentLabel" type="Label" parent="Panel/MarginContainer/HBox/LeftColumn/StatsPanel/StatsVBox"]
+layout_mode = 2
+text = "Talent: 50"
+
+[node name="StaminaLabel" type="Label" parent="Panel/MarginContainer/HBox/LeftColumn/StatsPanel/StatsVBox"]
+layout_mode = 2
+text = "Stamina: 50"
+
+[node name="StyleLabel" type="Label" parent="Panel/MarginContainer/HBox/LeftColumn/StatsPanel/StatsVBox"]
+layout_mode = 2
+text = "Style: 50"
+
+[node name="HSeparator3" type="HSeparator" parent="Panel/MarginContainer/HBox/LeftColumn/StatsPanel/StatsVBox"]
+layout_mode = 2
+
+[node name="WeightLabel" type="Label" parent="Panel/MarginContainer/HBox/LeftColumn/StatsPanel/StatsVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.7, 0.5, 1)
+text = "Weight: 100"
+
+[node name="FullnessLabel" type="Label" parent="Panel/MarginContainer/HBox/LeftColumn/StatsPanel/StatsVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.8, 0.6, 1)
+text = "Fullness: 0/100"
+
+[node name="BBFactorLabel" type="Label" parent="Panel/MarginContainer/HBox/LeftColumn/StatsPanel/StatsVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.6, 0.8, 1)
+text = "BB Factor: 0"
+
+[node name="Spacer" type="Control" parent="Panel/MarginContainer/HBox/LeftColumn/StatsPanel/StatsVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MoodPanel" type="PanelContainer" parent="Panel/MarginContainer/HBox/LeftColumn"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+
+[node name="MoodVBox" type="VBoxContainer" parent="Panel/MarginContainer/HBox/LeftColumn/MoodPanel"]
+layout_mode = 2
+alignment = 1
+
+[node name="MoodHeader" type="Label" parent="Panel/MarginContainer/HBox/LeftColumn/MoodPanel/MoodVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 12
+text = "MOOD"
+horizontal_alignment = 1
+
+[node name="MoodLabel" type="Label" parent="Panel/MarginContainer/HBox/LeftColumn/MoodPanel/MoodVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(1.0, 0.85, 0.4, 1)
+text = "Happy"
+horizontal_alignment = 1
+
+[node name="RightColumn" type="VBoxContainer" parent="Panel/MarginContainer/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.2
+theme_override_constants/separation = 10
+
+[node name="PortraitPanel" type="PanelContainer" parent="Panel/MarginContainer/HBox/RightColumn"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="PortraitVBox" type="VBoxContainer" parent="Panel/MarginContainer/HBox/RightColumn/PortraitPanel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="PortraitHeader" type="Label" parent="Panel/MarginContainer/HBox/RightColumn/PortraitPanel/PortraitVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 14
+text = "PORTRAIT"
+horizontal_alignment = 1
+
+[node name="PortraitImage" type="TextureRect" parent="Panel/MarginContainer/HBox/RightColumn/PortraitPanel/PortraitVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+expand_mode = 1
+stretch_mode = 5
+
+[node name="PortraitPlaceholder" type="Label" parent="Panel/MarginContainer/HBox/RightColumn/PortraitPanel/PortraitVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
+theme_override_font_sizes/font_size = 24
+text = "Portrait 1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HintLabel" type="Label" parent="Panel/MarginContainer/HBox/RightColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
+theme_override_font_sizes/font_size = 12
+text = "Q to Close"
+horizontal_alignment = 1

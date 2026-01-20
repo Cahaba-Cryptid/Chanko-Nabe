@@ -1,0 +1,184 @@
+[gd_scene load_steps=3 format=3 uid="uid://dr_dan_shop_001"]
+
+[ext_resource type="Script" path="res://src/ui/dr_dan_shop.gd" id="1_script"]
+[ext_resource type="Theme" path="res://theme/game_theme.tres" id="2_theme"]
+
+[node name="DrDanShop" type="Control"]
+theme = ExtResource("2_theme")
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Dimmer" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0.05, 0, 0.75)
+
+[node name="Panel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -400.0
+offset_top = -280.0
+offset_right = 400.0
+offset_bottom = 280.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 15
+
+[node name="HBox" type="HBoxContainer" parent="Panel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="ItemListPanel" type="PanelContainer" parent="Panel/MarginContainer/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.2
+
+[node name="ItemListVBox" type="VBoxContainer" parent="Panel/MarginContainer/HBox/ItemListPanel"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="ItemListHeader" type="Label" parent="Panel/MarginContainer/HBox/ItemListPanel/ItemListVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.8, 0.4, 1)
+theme_override_font_sizes/font_size = 14
+text = "DR. DAN'S BACK-ALLEY VAN"
+horizontal_alignment = 1
+
+[node name="ItemListScroll" type="ScrollContainer" parent="Panel/MarginContainer/HBox/ItemListPanel/ItemListVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="ItemsContainer" type="VBoxContainer" parent="Panel/MarginContainer/HBox/ItemListPanel/ItemListVBox/ItemListScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 2
+
+[node name="DescriptionPanel" type="PanelContainer" parent="Panel/MarginContainer/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="DescriptionVBox" type="VBoxContainer" parent="Panel/MarginContainer/HBox/DescriptionPanel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="DescriptionHeader" type="Label" parent="Panel/MarginContainer/HBox/DescriptionPanel/DescriptionVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.8, 0.4, 1)
+theme_override_font_sizes/font_size = 14
+text = "DETAILS"
+horizontal_alignment = 1
+
+[node name="ItemImage" type="TextureRect" parent="Panel/MarginContainer/HBox/DescriptionPanel/DescriptionVBox"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ItemNameLabel" type="Label" parent="Panel/MarginContainer/HBox/DescriptionPanel/DescriptionVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Item Name"
+horizontal_alignment = 1
+
+[node name="DescriptionLabel" type="Label" parent="Panel/MarginContainer/HBox/DescriptionPanel/DescriptionVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+text = "Item description goes here."
+autowrap_mode = 2
+
+[node name="Spacer" type="Control" parent="Panel/MarginContainer/HBox/DescriptionPanel/DescriptionVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="StatsVBox" type="VBoxContainer" parent="Panel/MarginContainer/HBox/DescriptionPanel/DescriptionVBox"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="EffectLabel" type="Label" parent="Panel/MarginContainer/HBox/DescriptionPanel/DescriptionVBox/StatsVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.9, 0.5, 1)
+text = "Effect: +5 Stamina"
+
+[node name="DurationLabel" type="Label" parent="Panel/MarginContainer/HBox/DescriptionPanel/DescriptionVBox/StatsVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.7, 0.8, 1)
+text = "Procedure: 30 min"
+
+[node name="PriceLabel" type="Label" parent="Panel/MarginContainer/HBox/DescriptionPanel/DescriptionVBox/StatsVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1.0, 0.85, 0.4, 1)
+text = "Price: 500"
+
+[node name="CartPanel" type="PanelContainer" parent="Panel/MarginContainer/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CartVBox" type="VBoxContainer" parent="Panel/MarginContainer/HBox/CartPanel"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="CartHeader" type="Label" parent="Panel/MarginContainer/HBox/CartPanel/CartVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.8, 0.4, 1)
+theme_override_font_sizes/font_size = 14
+text = "ORDER"
+horizontal_alignment = 1
+
+[node name="CartScroll" type="ScrollContainer" parent="Panel/MarginContainer/HBox/CartPanel/CartVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="CartItemsContainer" type="VBoxContainer" parent="Panel/MarginContainer/HBox/CartPanel/CartVBox/CartScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 2
+
+[node name="HSeparator" type="HSeparator" parent="Panel/MarginContainer/HBox/CartPanel/CartVBox"]
+layout_mode = 2
+
+[node name="TotalLabel" type="Label" parent="Panel/MarginContainer/HBox/CartPanel/CartVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1.0, 0.85, 0.4, 1)
+theme_override_font_sizes/font_size = 16
+text = "Total: 0"
+horizontal_alignment = 1
+
+[node name="MoneyLabel" type="Label" parent="Panel/MarginContainer/HBox/CartPanel/CartVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+text = "You have: 1,000"
+horizontal_alignment = 1
+
+[node name="HSeparator2" type="HSeparator" parent="Panel/MarginContainer/HBox/CartPanel/CartVBox"]
+layout_mode = 2
+
+[node name="HintLabel" type="Label" parent="Panel/MarginContainer/HBox/CartPanel/CartVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
+theme_override_font_sizes/font_size = 11
+text = "Hold V to Purchase
+Q to Close"
+horizontal_alignment = 1

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir \"%APPDATA%\\\\Godot\\\\app_userdata\\\\Chanko Nabe\\\\*.dat\")",
+      "Bash(dir \"%APPDATA%\\\\Godot\\\\app_userdata\\\\Chanko Nabe\")",
+      "Bash(dir \"%APPDATA%\\\\Godot\\\\app_userdata\")",
+      "Bash(powershell -Command:*)"
+    ]
+  }
+}
