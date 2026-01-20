@@ -1,0 +1,566 @@
+================================================================================
+CHANKO NABE - Design Notes
+================================================================================
+Last Updated: 2026-01-20 (Session: Follower ranks + Dialogue system)
+
+Point Claude to this file at the start of each session for context.
+See TODO.txt for task tracking and implementation status.
+
+RECENT CHANGES:
+- Implemented dialogue system (DialogueManager autoload)
+  - Typewriter effect, skip/advance, speaker profiles
+  - Speakers: Vex, Dr. Dan, Vendi, Recruiter, System
+  - Tracks seen dialogues for one-time events
+  - Save/load integration
+- Implemented follower rank system (23 tiers from Nobody to Singularity)
+  - Followers are now the primary progression metric
+  - 3 acts tied to follower milestones and space upgrades
+  - Character detail panel shows formatted followers and rank
+- Extended body size tiers to 9 (0-8) for endgame content
+  - New tiers: Colossal, Titanic, Planetary (building to city-crushing scale)
+- Fixed "No Empty Slots" screen not allowing back navigation
+
+================================================================================
+GAME CONCEPT
+================================================================================
+
+Dystopian management sim. Player manages streamers under a CammTec license.
+Make quota or get sent to off-world mining. Everyone's exploiting everyone.
+
+Core loop: Recruit streamers → Train them → Stream for income → Hit quota → Survive
+
+Inspired by HunieCam Studio but bigger scope.
+
+================================================================================
+SETTING / STORY
+================================================================================
+
+THE WORLD (2075)
+
+Fifty years from now. Climate collapse drove humanity into megacities. Automation
+killed most jobs. Universal Basic Income keeps people alive but not comfortable.
+The only path to real money is content creation - and CammTec owns it all.
+
+"The Stream" is the only platform that matters. Social media, entertainment,
+news, shopping - all consolidated under CammTec's monopoly after the Platform
+Wars of the 2050s. They don't just host content; they ARE the internet now.
+
+Content evolved. When everyone's a creator, you need an edge. Fetish content
+pays 10x normal rates. CammTec normalized it, monetized it, industrialized it.
+Weight gain, feeding, pregnancy - what was once niche is now mainstream premium
+content. Streamers aren't just performers; they're commodities with measurable
+ROI.
+
+The off-world mining colonies (asteroid belt, Mars) need workers. CammTec has
+contracts with the Colonial Labor Authority. Fail to pay your debts? You get
+"relocated" to a 20-year mining contract. The recruitment ads call it an
+adventure. Nobody comes back to tell you different.
+
+PLAYER SITUATION
+
+You tried the safe route. Fitness content. Lifestyle vlogs. Generic stuff.
+Three months in, you're $3,000 in debt to CammTec with declining viewership.
+Your account is flagged for "underperformance review."
+
+Then Vex contacts you. She's an AI account manager - one of thousands CammTec
+uses to handle their creator base. She has a proposal: pivot to premium content.
+Feedism. Weight gain. The stuff that actually pays. She'll guide you, but you
+need to recruit talent, manage them, and hit quota. Every week.
+
+Miss quota and CammTec adds penalties. Miss it again and you're in "remediation."
+Miss it a third time and the debt collectors come. They're not interested in
+payment plans. They're interested in filling mining quotas.
+
+THE TONE
+
+Everyone's exploiting everyone. CammTec exploits creators. You exploit your
+streamers. Your streamers exploit their viewers. The viewers exploit the
+parasocial relationship. It's dystopian capitalism played straight - dark but
+not grimdark. There's gallows humor. Small moments of genuine connection.
+The question isn't whether the system is evil; it's whether you can find
+something human within it.
+
+FAIL STATE
+
+Debt collectors arrive. You get a one-way ticket to the asteroid belt. Game over
+screen shows your "relocation paperwork." Maybe a bleak epilogue about your
+first day in the mines. The threat should feel real but not gratuitous.
+
+WIN STATE / ENDGAME
+
+Characters grow so massive they crush an evacuated city. The game culminates in
+transcendence - streamers with billions of followers, planetary-scale bodies,
+cultural singularity. See PROGRESSION SYSTEM section for details.
+
+================================================================================
+KEY CHARACTERS
+================================================================================
+
+VEX - AI Account Manager
+- Goth girl energy, perpetually unimpressed, zero filter, lowercase typing
+- Has her own kinks (weight gain, feeding, pregnancy content)
+- Needs player to succeed or she gets demoted to data sorting
+- Relationship arc progresses over weeks based on player choices
+
+DR. DAN - Black Market Supplier
+- Provides augments, supplements, surrogacy contracts
+- Gets free premium access to streamer content in exchange
+- Personality TBD (sleazy dealer? clinical professional? principled body-mod advocate?)
+
+VENDI - AI Vending Machine
+- Another AI trapped in the system
+- Details TBD
+
+RECRUITER AI - Talent Aggregator
+- Friend of Vex
+- Takes cut from every hire
+- Offers tiered applicant pools (budget/standard/premium)
+- Personality TBD
+
+================================================================================
+ARCHETYPES
+================================================================================
+
+Each archetype has stat weights (charm/talent/stamina/style) for effectiveness
+calculation, plus passive bonuses. Defined in data/archetypes.json.
+
+GLUTTON (0.2/0.3/0.4/0.1) - Eating content specialist
+- +25% capacity training chance
+- -10% weight gain
+
+BROODMOTHER (0.4/0.1/0.3/0.2) - Surrogacy and pregnancy content
+- +1 base womb capacity at creation
+- +15% surrogacy/pregnancy income
+- -15% genetic augment cost, +50% genetic augment effect
+
+E-GIRL (0.4/0.1/0.1/0.4) - Social media and follower focused
+- -25% follower decay
+- +20% socializing gains
+
+CYBERGOTH (0.1/0.3/0.2/0.4) - Augmentation and endurance
+- -20% energy drain on all tasks
+- -30% follower decay
+- -15% cybernetic augment cost, +50% cybernetic augment effect
+
+HUCOW (0.35/0.15/0.35/0.15) - Milk production and breeding
+- Always lactating (no trigger needed)
+- +25% milk production
+- +15% milk value
+
+LICENSEE (0.3/0.4/0.1/0.2) - Management only (can't perform)
+- -10% NPC salaries
+- +10% NPC effectiveness
+- Starts with $2000 and 1 NPC (others start with $750, 0 NPCs)
+
+Augment Categories:
+- Cybernetic: Implants, tech mods (Cybergoth bonus)
+- Genetic: Biological modifications (Broodmother bonus)
+
+Fat Distribution by Archetype (belly/bust/hips):
+- Default:     70% / 20% / 10%  (standard distribution)
+- Glutton:     80% / 10% / 10%  (belly-focused gainer)
+- Broodmother: 60% / 25% / 15%  (wider hips for breeding)
+- E-Girl:      50% / 35% / 15%  (balanced for appeal)
+- Cybergoth:   40% / 45% / 15%  (bust-heavy, augment-enhanced)
+- Hucow:       30% / 55% / 15%  (massive bust priority)
+- Licensee:    70% / 20% / 10%  (default, management focus)
+
+================================================================================
+BODY SIZE SYSTEM
+================================================================================
+
+Characters have body part sizes tracked independently from weight. When weight
+is gained, it distributes to body parts based on archetype ratios.
+
+SIZE COMPONENTS:
+
+Belly Total = belly_fat + stuffed_contribution + pregnancy_contribution
+- belly_fat: Permanent, from weight gain
+- stuffed_contribution: Temporary, from stomach_fullness * 0.5
+- pregnancy_contribution: bb_factor * 30 (each level adds significant size)
+
+Bust Total = bust_base + bust_fat + milk_contribution
+- bust_base: Starting size (default 10, can be modified by augments)
+- bust_fat: From weight gain
+- milk_contribution: Up to +20 when milk storage is full
+
+Hips Total = hips_fat
+- Tracked but not currently used in gameplay
+
+SIZE TIERS (same thresholds for all body parts):
+| Tier | Belly Label | Bust Label | Value Range | Scale |
+|------|-------------|------------|-------------|-------|
+| 0    | Flat        | Modest     | 0-10        | Normal |
+| 1    | Soft        | Perky      | 11-25       | Normal |
+| 2    | Pudgy       | Full       | 26-50       | Normal |
+| 3    | Round       | Heavy      | 51-80       | Large |
+| 4    | Huge        | Massive    | 81-120      | Room-filling |
+| 5    | Immense     | Enormous   | 121-200     | Furniture-breaking |
+| 6    | Colossal    | Colossal   | 201-350     | Building-sized |
+| 7    | Titanic     | Titanic    | 351-600     | Block-spanning |
+| 8    | Planetary   | Planetary  | 601+        | City-crushing |
+
+GAMEPLAY IMPACT:
+- Bigger = better income (audience always prefers bigger)
+- Portrait swaps at tier thresholds (future)
+- Mobility penalties at extreme sizes (future)
+- Size requirements for certain stream kits (future)
+- Space limits max achievable tier (see PROGRESSION below)
+
+================================================================================
+PROGRESSION SYSTEM
+================================================================================
+
+Followers are the primary progression metric. More followers = higher "level".
+
+FOLLOWER RANKS (~25-30 tiers):
+
+Act 1 - Basement Era (Desperate, 50 - 10,000 followers)
+| Followers | Rank |
+|-----------|------|
+| 50        | Nobody |
+| 100       | Newbie |
+| 250       | Amateur |
+| 500       | Hopeful |
+| 1,000     | Known |
+| 2,500     | Rising |
+| 5,000     | Notable |
+| 10,000    | Popular |
+
+Act 2 - Warehouse Era (Growing, 10,000 - 1,000,000 followers)
+| Followers | Rank |
+|-----------|------|
+| 25,000    | Trending |
+| 50,000    | Famous |
+| 100,000   | Star |
+| 250,000   | Superstar |
+| 500,000   | Icon |
+| 1,000,000 | Millionaire |
+
+Act 3 - City Block Era (Transcendent, 1,000,000+ followers)
+| Followers     | Rank |
+|---------------|------|
+| 2,500,000     | Sensation |
+| 5,000,000     | Megastar |
+| 10,000,000    | Legend |
+| 25,000,000    | Global |
+| 50,000,000    | Titan |
+| 100,000,000   | Planetary |
+| 250,000,000   | Continental |
+| 500,000,000   | Deity |
+| 1,000,000,000 | Singularity |
+
+SPACE UPGRADES:
+
+Each upgrade requires: Follower threshold + Size threshold + Cash payment
+Vex prompts upgrade when all requirements are met (requires dialogue system).
+Characters CANNOT grow beyond current space's max tier.
+
+| Space | Max Size Tier | Follower Req | Size Req | Cost |
+|-------|---------------|--------------|----------|------|
+| Basement Apartment | 4 (Huge) | -- | -- | Starting location |
+| Vacant Warehouse | 6 (Colossal) | 10,000 | Tier 4 | $50,000 |
+| City Blocks | 8 (Planetary) | 1,000,000 | Tier 6 | $500,000 |
+
+STORY BEATS:
+
+Act 1 (Basement): Desperate survival. Just trying to avoid being shipped off as
+indentured labor. Cramped quarters, scraping by week to week.
+
+Act 2 (Warehouse): Growth and expansion. Characters are getting too big for the
+basement. Move into the vacant warehouse above. More stations, more streamers,
+more income potential.
+
+Act 3 (City Blocks): Transcendence. Characters have grown so massive that
+multiple city blocks of warehouses must be cleared to accommodate them. Endgame
+culminates in characters crushing an evacuated city with their sheer size.
+
+================================================================================
+STREAMER STATS (JSON Schema)
+================================================================================
+
+{
+  "streamer": {
+	"id": "uuid",
+	"name": "Mia",
+	"portrait": "mia_01.png",
+
+	"physical": {
+	  "weight": 145,
+	  "baseWeight": 145,
+	  "capacity": 50,        // How much they can eat per session, trainable
+	  "metabolism": "slow"   // slow/normal/fast, affects weight gain
+	},
+
+	"skills": {
+	  "stuffing": 1,         // Efficiency during feeding content
+	  "performance": 1,      // Viewer engagement, tips
+	  "endurance": 1         // Longer streams, faster recovery
+	},
+
+	"kinks": ["feedee", "belly"],  // Content tags they can perform
+	"traits": ["eager", "camera-shy"],  // Personality modifiers
+
+	"pregnancy": {
+	  "active": false,
+	  "weeksRemaining": 0,
+	  "contractTier": null,  // 1=12wks, 2=20wks, 3=24wks
+	  "surrogacyValue": 0
+	},
+
+	"augments": [],
+	"supplements": [],
+
+	"status": "idle",
+	"currentTask": null,
+	"taskTimeRemaining": 0
+  }
+}
+
+Kinks = content categories (feedee, belly, pregnancy, mukbang)
+Traits = work/personality modifiers (eager, camera-shy)
+
+================================================================================
+STATIONS
+================================================================================
+
+CAM STUDIO - Main income generation
+- Streaming earns money based on weight * skills * pregnancy multiplier
+- Feeding streams: +$300-600, +8 lbs, costs $50 food
+
+DOCTOR'S OFFICE (Dr. Dan)
+- Augments (expensive, permanent)
+- Supplements (consumables, ongoing)
+- Surrogacy contracts
+- Takes time to shop - must assign streamer to go there
+
+VENDI - Vending machines
+- Items, snacks
+- Details TBD
+
+TRAINING STATION
+- Food training (stuffing skill, capacity)
+- Time-locked like streaming
+
+PERSONAL SPACE
+- Rest and recovery
+- Stamina regeneration
+
+MILKING STATION - Milk collection for lactating characters
+- Requires: Character must be lactating (Hucow, pregnant, or lactation augment)
+- Collects all stored milk, converts to income ($2/unit base, Hucow +15%)
+- Relieves discomfort, restores mood
+- 1 hour duration, CammTec takes 40% cut
+
+================================================================================
+ECONOMY
+================================================================================
+
+Income:
+- Streaming base * weight multiplier * pregnancy bonus
+- Weight multipliers: 150+ = 1.5x, 180+ = 2.0x, 220+ = 2.5x
+- Pregnancy bonus: Trimester 1 = +0.5, T2 = +1.2, T3 = +2.0
+
+Costs:
+- Feeding: $50 per session
+- Streamer salary cuts: base % + modifiers for active kinks
+- Pregnant streamers cost more (bigger belly = bigger cut)
+- CammTec takes 40% of weekly earnings automatically
+
+Quota/Debt System (Implemented):
+- Starting debt: ¤25,000
+- Week 1 quota: ¤10,000, escalates 20% per week
+- Tracks NET earnings (player's cut after 40% CammTec take)
+- Meeting quota: Quota amount is applied to debt, excess kept
+- Missing quota: 3-day grace period activates
+
+Grace Period:
+- Must pay: shortfall + late fee
+- Base late fee: ¤500 (escalates +¤500 per repeat offense)
+- Quota keeps escalating during grace
+- Success: Pay shortfall+fee, advance to next week
+- Failure: Game over (save deleted, return to main menu)
+
+Zone 3 UI shows: Week N quota, ¤earned/¤target, days remaining, debt
+Colors: Green (met), Gold (on track), Orange (behind), Red (way behind)
+Grace warning appears with remaining days and amount owed
+
+Recruitment (Implemented):
+- Press R from roster to open Recruitment Terminal
+- 4 ad tiers with different costs, stat ranges, and archetype weights:
+  - Budget ($100): 1-2 applicants, stats 15-40, 1 day
+  - Standard ($500): 2-4 applicants, stats 25-55, 2 days
+  - Premium ($1500): 3-5 applicants, stats 40-70, 3 days
+  - Elite ($5000): 2-3 applicants, stats 55-85, 3 days
+- Applicants wait 5 days before leaving if not hired
+- Hiring costs a signing bonus ($50-200)
+- Max 10 applicants in pool at once
+- Data in data/recruitment.json
+
+Kink Unlocks (Dr. Dan's Shop):
+- Characters can purchase kink certifications to unlock new content types
+- Stuffing ($300): Required for stuffing streams
+- Pregnancy ($400): Required for pregnancy content
+- Hyperpregnancy ($800): Requires pregnancy license first
+- Lactation ($350): Required for milking/lactation streams
+- Hucow ($600): Requires lactation license first
+- Data in data/dr_dan_items.json (type: "kink")
+
+Community Reputation:
+- License/group rating
+- Affects ad effectiveness, applicant quality, offer acceptance
+- Damaged by dumping streamers
+
+================================================================================
+DIALOGUE SYSTEM
+================================================================================
+
+Reusable dialogue system for NPC conversations, story beats, and prompts.
+
+SPEAKERS (data/speakers.json):
+- vex: AI account manager, lowercase typing, purple accent
+- dr_dan: Black market doctor, green accent
+- vendi: Vending machine AI, blue accent
+- recruiter: Talent recruiter AI, orange accent
+- system: Generic system messages, grey
+
+USAGE:
+  # Quick one-liner
+  DialogueManager.play(DialogueManager.vex("hey there."))
+
+  # Multi-line
+  var dialogue := DialogueData.new()
+  dialogue.add_line("vex", "hey there.")
+  dialogue.add_line("vex", "welcome to cammtec.")
+  DialogueManager.play(dialogue)
+
+  # With callback
+  DialogueManager.play(dialogue, func(): print("done!"))
+
+  # One-time dialogue (tracks by ID)
+  dialogue.set_id("intro_tutorial")
+  DialogueManager.play_once(dialogue)
+
+FEATURES:
+- Typewriter effect (40 chars/sec default)
+- Skip: First press completes line, second advances
+- Input keys: WASD, Q, E, Space, Enter
+- Pauses game while active
+- Queues dialogues if one is already playing
+- Tracks seen dialogues for one-time events
+- Save/load integration
+
+FILES:
+- src/autoloads/dialogue_manager.gd (autoload)
+- src/resources/dialogue_data.gd (data class)
+- scenes/ui/dialogue_box.gd/.tscn (UI)
+- data/speakers.json (speaker definitions)
+
+================================================================================
+UI LAYOUT
+================================================================================
+
+3-Zone System:
+
+ZONE 1 (Bottom, full width)
+- Side-view of city block
+- Stations are physical locations in this view
+- Ambient city life animates in background (stretch goal)
+- Always visible
+
+ZONE 2 (Top Right)
+- Streamer portraits
+- Main interaction area - menu-driven
+- Click portrait → see stats
+- Navigate menus to assign streamers to stations
+
+ZONE 3 (Top Left)
+- Money tracker
+- Date/time (10-minute increments)
+- Days online
+- News ticker (stretch goal)
+- Viewer counts
+
+BACKGROUND
+- Dystopian cityscape
+- Always visible behind UI panels
+
+================================================================================
+TIME SYSTEM
+================================================================================
+
+- Clock advances in 10-minute increments (12:00 → 12:10 → 12:20)
+- 3 shifts per day
+- 3 actions per shift
+- Day runs from 6am to 10pm
+- Weekly quota check at end of week
+
+Speed controls: 1x, 2x, 4x, 8x (F3/F4 in debug)
+
+================================================================================
+TECHNICAL DECISIONS
+================================================================================
+
+- Engine: Godot 4.3
+- Language: GDScript
+- Data storage: JSON for saves, stats, inventory, items
+- Target: PC (Windows primary)
+
+Save File Location:
+- Path: user://save_slot_X.dat (where X = A, B, or C)
+- Windows: %APPDATA%\Godot\app_userdata\ProjectCN\
+- In Godot Editor: Project → Open User Data Folder
+- Files: save_slot_A.dat, save_slot_B.dat, save_slot_C.dat
+
+Current autoloads:
+- GameManager - global state, money, characters, save/load
+- TimeManager - day/night cycle, task scheduling
+- DialogueManager - dialogue display, typewriter effect, seen tracking
+
+Theme System:
+- theme/game_theme.tres - Global Theme resource applied to root UI nodes
+- theme/theme_colors.gd - ThemeColors class with color constants
+- To reskin: Edit game_theme.tres for control defaults, use ThemeColors in scripts
+- Individual theme_override_* in scenes still work for exceptions
+
+================================================================================
+CURRENT STATE (see todo.txt for detailed implementation status)
+================================================================================
+
+Implemented Systems:
+- Core: GameManager, TimeManager, DialogueManager, Save/Load, 3-zone UI, keyboard navigation
+- Characters: Stats, hunger/mood/fatigue, exhaustion/burnout, followers, kinks
+- Archetypes: All 6 with passive effects + starting bonuses + fat distribution
+- Body Size: Belly/bust/hips tracking, archetype-based fat distribution, size tiers
+- Progression: Follower ranks (23 tiers), act system (3 acts), formatted follower display
+- Kinks: Per-character kinks, audience preferences, stream requirements
+- Milk: Production, overflow, emergency self-milk, sticky warnings
+- Stations: Cam Studio, Dr. Dan's, Vendi Shop, Binge, Relax, Socialize, Milking, Contest (placeholder)
+- Economy: CammTec 40% cut, income formula, feeding costs, minimum $25 payout
+- Quota/Debt: Weekly quotas, grace periods, late fees, game over on failure
+- Recruitment: Ad tiers, applicant pool, hiring with signing bonus
+- Dialogue: Typewriter effect, skip/advance, speaker profiles, seen tracking
+
+Game Flow:
+- Main Menu → Archetype Selection → Name Entry → (Augment Choice for Cybergoth) → Save Slot → Gameplay
+- Auto-save at start of each new day
+- Escape opens game menu with Return to Main Menu
+- Game over on failed grace period (save deleted)
+
+Controls (quick reference):
+- WASD/Arrows: Navigate | E: Select | Q: Back (hold to close all)
+- Space: Pause | Escape: Game menu | R: Recruitment terminal
+- A/D: Add/Remove (in dialogs) | Hold V: Confirm
+- Name entry: Full typing, Esc to go back
+
+Debug Keys (editor only):
+- F1: +$500 | F3/F4: Time speed
+
+Next Up:
+- Space upgrade system (unlock warehouse, city blocks)
+- Vex intro dialogue and space upgrade prompts
+- Game over screen with relocation paperwork
+- Win condition / endgame (city-crushing finale)
+- UI to display character kinks and audience breakdown
+
+================================================================================
