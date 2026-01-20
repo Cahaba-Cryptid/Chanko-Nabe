@@ -10,10 +10,16 @@
 				"stamina": 0.4,
 				"style": 0.1
 			},
+			"fat_distribution": {
+				"belly": 0.80,
+				"bust": 0.10,
+				"hips": 0.10
+			},
 			"passives": {
 				"capacity_training_bonus": 0.25,
 				"weight_gain_reduction": 0.10
 			},
+			"starting_kinks": ["stuffing"],
 			"starting_money": 750,
 			"starting_npcs": 0,
 			"can_perform": true
@@ -28,12 +34,18 @@
 				"stamina": 0.3,
 				"style": 0.2
 			},
+			"fat_distribution": {
+				"belly": 0.60,
+				"bust": 0.25,
+				"hips": 0.15
+			},
 			"passives": {
 				"base_womb_capacity_bonus": 1,
 				"surrogacy_income_bonus": 0.15,
 				"genetic_augment_cost_reduction": 0.15,
 				"genetic_augment_effect_bonus": 0.50
 			},
+			"starting_kinks": ["pregnancy"],
 			"starting_money": 750,
 			"starting_npcs": 0,
 			"can_perform": true
@@ -48,10 +60,17 @@
 				"stamina": 0.1,
 				"style": 0.4
 			},
+			"fat_distribution": {
+				"belly": 0.50,
+				"bust": 0.35,
+				"hips": 0.15
+			},
 			"passives": {
 				"follower_decay_reduction": 0.25,
 				"socializing_bonus": 0.20
 			},
+			"starting_kinks": [],
+			"starting_followers": 200,
 			"starting_money": 750,
 			"starting_npcs": 0,
 			"can_perform": true
@@ -66,12 +85,18 @@
 				"stamina": 0.2,
 				"style": 0.4
 			},
+			"fat_distribution": {
+				"belly": 0.40,
+				"bust": 0.45,
+				"hips": 0.15
+			},
 			"passives": {
 				"energy_drain_reduction": 0.20,
 				"cybernetic_augment_effect_bonus": 0.50,
 				"cybernetic_augment_cost_reduction": 0.15,
 				"follower_decay_reduction": 0.30
 			},
+			"starting_kinks": [],
 			"starting_money": 750,
 			"starting_npcs": 0,
 			"can_perform": true
@@ -86,11 +111,17 @@
 				"stamina": 0.35,
 				"style": 0.15
 			},
+			"fat_distribution": {
+				"belly": 0.30,
+				"bust": 0.55,
+				"hips": 0.15
+			},
 			"passives": {
 				"always_lactating": true,
 				"milk_production_bonus": 0.25,
 				"milk_value_bonus": 0.15
 			},
+			"starting_kinks": ["hucow", "lactation"],
 			"starting_money": 750,
 			"starting_npcs": 0,
 			"can_perform": true
@@ -105,10 +136,16 @@
 				"stamina": 0.1,
 				"style": 0.2
 			},
+			"fat_distribution": {
+				"belly": 0.70,
+				"bust": 0.20,
+				"hips": 0.10
+			},
 			"passives": {
 				"npc_salary_reduction": 0.10,
 				"npc_effectiveness_bonus": 0.10
 			},
+			"starting_kinks": [],
 			"starting_money": 2000,
 			"starting_npcs": 1,
 			"can_perform": false

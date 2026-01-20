@@ -1,6 +1,51 @@
 {
   "items": [
     {
+      "id": "starter_breast_enhancer",
+      "name": "Basic Breast Enhancer",
+      "description": "Entry-level implant. Modest milk capacity increase.",
+      "price": 500,
+      "type": "augment",
+      "augment_category": "cybernetic",
+      "effect": "+25 Milk Capacity",
+      "procedure_time": 60,
+      "stat_changes": {
+        "milk_capacity": 25
+      },
+      "is_starter": true,
+      "image": ""
+    },
+    {
+      "id": "starter_stomach_liner",
+      "name": "Basic Stomach Liner",
+      "description": "Entry-level implant. Modest capacity increase.",
+      "price": 500,
+      "type": "augment",
+      "augment_category": "cybernetic",
+      "effect": "+15 Stomach Capacity",
+      "procedure_time": 60,
+      "stat_changes": {
+        "stomach_capacity": 15
+      },
+      "is_starter": true,
+      "image": ""
+    },
+    {
+      "id": "starter_womb_reinforcement",
+      "name": "Basic Womb Reinforcement",
+      "description": "Entry-level implant. Supports additional pregnancy load.",
+      "price": 500,
+      "type": "augment",
+      "augment_category": "cybernetic",
+      "effect": "+1 Womb Capacity",
+      "procedure_time": 60,
+      "stat_changes": {
+        "womb_capacity": 1
+      },
+      "is_starter": true,
+      "image": ""
+    },
+    {
       "id": "energy_drip",
       "name": "Energy IV Drip",
       "description": "Nutrient cocktail administered intravenously. You'll feel refreshed.",
@@ -233,6 +278,63 @@
       "effect": "+3 BB Factor",
       "procedure_time": 360,
       "bb_factor_gain": 3,
+      "image": ""
+    },
+    {
+      "id": "kink_stuffing",
+      "name": "Stuffing Certification",
+      "description": "Training course for extreme eating content. Learn proper pacing and belly display techniques.",
+      "price": 300,
+      "type": "kink",
+      "effect": "Unlocks Stuffing content",
+      "procedure_time": 120,
+      "kink_id": "stuffing",
+      "image": ""
+    },
+    {
+      "id": "kink_pregnancy",
+      "name": "Pregnancy Content License",
+      "description": "Certification for pregnancy-focused streams. Covers safe practices and viewer expectations.",
+      "price": 400,
+      "type": "kink",
+      "effect": "Unlocks Pregnancy content",
+      "procedure_time": 120,
+      "kink_id": "pregnancy",
+      "image": ""
+    },
+    {
+      "id": "kink_hyperpregnancy",
+      "name": "Hyperpregnancy Endorsement",
+      "description": "Advanced certification for extreme pregnancy content. Requires pregnancy license.",
+      "price": 800,
+      "type": "kink",
+      "effect": "Unlocks Hyperpregnancy content",
+      "procedure_time": 180,
+      "kink_id": "hyperpregnancy",
+      "requires_kink": "pregnancy",
+      "image": ""
+    },
+    {
+      "id": "kink_lactation",
+      "name": "Lactation License",
+      "description": "Training for milk-related content. Covers hygiene, collection, and presentation.",
+      "price": 350,
+      "type": "kink",
+      "effect": "Unlocks Lactation content",
+      "procedure_time": 120,
+      "kink_id": "lactation",
+      "image": ""
+    },
+    {
+      "id": "kink_hucow",
+      "name": "Hucow Certification",
+      "description": "Specialized training for full hucow persona content. The cowbell is included.",
+      "price": 600,
+      "type": "kink",
+      "effect": "Unlocks Hucow content",
+      "procedure_time": 180,
+      "kink_id": "hucow",
+      "requires_kink": "lactation",
       "image": ""
     }
   ]

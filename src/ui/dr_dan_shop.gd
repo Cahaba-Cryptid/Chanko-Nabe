@@ -220,7 +220,30 @@ func _can_add_item(item: Dictionary) -> bool:
 		if current_bb + cart_bb + bb_gain > _character.womb_capacity:
 			return false
 
+	# Kinks can only be purchased once and may have prerequisites
+	if item_type == "kink" and _character:
+		var kink_id: String = item.get("kink_id", "")
+		# Already has this kink or it's in cart
+		if _character.has_kink(kink_id) or _cart.has(item_id):
+			return false
+		# Check prerequisite kink (must have it or be in cart)
+		var requires_kink: String = item.get("requires_kink", "")
+		if not requires_kink.is_empty():
+			var has_prereq := _character.has_kink(requires_kink)
+			var prereq_in_cart := _is_kink_in_cart(requires_kink)
+			if not has_prereq and not prereq_in_cart:
+				return false
+
 	return true
+
+
+func _is_kink_in_cart(kink_id: String) -> bool:
+	## Check if a kink certification is already in the cart
+	for item_id in _cart:
+		for item in _items:
+			if item.get("id", "") == item_id and item.get("kink_id", "") == kink_id:
+				return true
+	return false
 
 
 func _update_description() -> void:
@@ -540,6 +563,8 @@ func _checkout() -> void:
 					_apply_procedure(purchase, quantity)
 				"contract":
 					_apply_contract(purchase, quantity)
+				"kink":
+					_apply_kink(purchase)
 
 		var time_to_skip := int(total_procedure_time)
 		TimeManager.skip_time(time_to_skip)
@@ -577,7 +602,7 @@ func _apply_procedure(item_data: Dictionary, quantity: int) -> void:
 			"stomach_capacity":
 				_character.stomach_capacity += change
 			"weight":
-				_character.weight += change
+				_character.add_weight(change)
 
 
 func _apply_infusion(item_data: Dictionary, quantity: int) -> void:
@@ -606,6 +631,14 @@ func _apply_contract(item_data: Dictionary, quantity: int) -> void:
 	var bb_gain: int = item_data.get("bb_factor_gain", 1)
 	var total_gain := bb_gain * quantity
 	_character.bb_factor = mini(_character.bb_factor + total_gain, _character.womb_capacity)
+
+
+func _apply_kink(item_data: Dictionary) -> void:
+	## Unlock a kink for the character
+	var kink_id: String = item_data.get("kink_id", "")
+	if kink_id.is_empty():
+		return
+	_character.add_kink(kink_id)
 
 
 func _apply_augment(item_data: Dictionary) -> void:
@@ -643,7 +676,7 @@ func _apply_augment(item_data: Dictionary) -> void:
 			"stomach_capacity":
 				_character.stomach_capacity += change
 			"weight":
-				_character.weight += change
+				_character.add_weight(change)
 
 
 func _format_number(value: int) -> String:

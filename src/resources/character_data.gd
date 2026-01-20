@@ -24,6 +24,14 @@ class_name CharacterData
 @export var womb_capacity: int = 1       # Max BB Factor (surrogacy limit)
 @export var bb_factor: int = 0           # Current pregnancy level (0 = none, capped by womb_capacity)
 
+# Body size stats (arbitrary units, 0-200+ scale)
+# Tiers: 0-10 Flat/Modest, 11-25 Soft/Perky, 26-50 Pudgy/Full, 51-80 Round/Heavy, 81-120 Huge/Massive, 121+ Immense/Enormous
+@export_group("Body Size")
+@export var belly_fat: float = 0.0       # Permanent belly size from weight gain
+@export var bust_base: float = 10.0      # Base bust size (genetics/augments)
+@export var bust_fat: float = 0.0        # Bust size from weight gain
+@export var hips_fat: float = 0.0        # Hip/thigh size from weight gain (tracked but not used yet)
+
 # Milk production
 @export var milk_capacity: int = 100     # Max milk storage
 @export var milk_current: int = 0        # Current milk amount
@@ -78,6 +86,21 @@ class_name CharacterData
 @export var followers: int = 100  # Base follower count
 @export var last_stream_day: int = 0  # Day of last stream (for decay tracking)
 @export var last_socialize_day: int = 0  # Day of last socialize (for decay tracking)
+
+# Kinks - content types character can perform (unlocked via Dr. Dan)
+# Valid kinks: stuffing, pregnancy, hyperpregnancy, lactation, hucow
+@export_group("Kinks")
+@export var kinks: Array[String] = []
+
+# Audience preferences - what % of followers prefer each kink (0.0-1.0)
+# Remainder is "general" audience with no kink preference
+@export var audience_preferences: Dictionary = {
+	"stuffing": 0.0,
+	"pregnancy": 0.0,
+	"hyperpregnancy": 0.0,
+	"lactation": 0.0,
+	"hucow": 0.0
+}
 
 # Debuffs - temporary stat penalties
 @export_group("Debuffs")
@@ -149,6 +172,7 @@ func get_archetype_passive(passive_name: String, default_value: Variant = 0.0) -
 func apply_archetype_creation_bonuses() -> void:
 	## Apply one-time bonuses when character is created with an archetype
 	## Call this after setting archetype_id on a new character
+	var arch_data := get_archetype_data()
 
 	# Breeder: +1 womb capacity at creation
 	var womb_bonus: int = get_archetype_passive("base_womb_capacity_bonus", 0)
@@ -160,11 +184,119 @@ func apply_archetype_creation_bonuses() -> void:
 	if always_lactating:
 		is_lactating = true
 
+	# Apply starting kinks from archetype
+	var starting_kinks: Array = arch_data.get("starting_kinks", [])
+	for kink in starting_kinks:
+		add_kink(kink)
+
+	# Apply starting followers if specified (E-Girl gets more)
+	var starting_followers: int = arch_data.get("starting_followers", 0)
+	if starting_followers > 0:
+		followers = starting_followers
+
 
 func can_perform() -> bool:
 	## Returns true if this character can perform content (Licensees cannot)
 	var arch_data := get_archetype_data()
 	return arch_data.get("can_perform", true)
+
+
+func has_kink(kink_name: String) -> bool:
+	## Check if character has a specific kink unlocked
+	return kink_name in kinks
+
+
+func add_kink(kink_name: String) -> void:
+	## Unlock a kink for this character
+	if not has_kink(kink_name):
+		kinks.append(kink_name)
+
+
+func has_required_kinks(required: Array) -> bool:
+	## Check if character has all required kinks for a stream kit
+	for kink in required:
+		if not has_kink(kink):
+			return false
+	return true
+
+
+func get_missing_kinks(required: Array) -> Array:
+	## Returns list of kinks the character is missing from required list
+	var missing: Array = []
+	for kink in required:
+		if not has_kink(kink):
+			missing.append(kink)
+	return missing
+
+
+func get_general_audience_percent() -> float:
+	## Returns the percentage of audience with no kink preference (0.0-1.0)
+	var total_kink_pref := 0.0
+	for pref in audience_preferences.values():
+		total_kink_pref += pref
+	return maxf(0.0, 1.0 - total_kink_pref)
+
+
+func get_audience_match(stream_kinks: Array) -> float:
+	## Calculate how well stream content matches audience preferences
+	## Returns 0.0-1.0 multiplier for income
+	## stream_kinks: Array of kink strings this stream caters to
+	if stream_kinks.is_empty():
+		# No kinks = general content, appeals to general audience + half of kink audiences
+		return get_general_audience_percent() + (1.0 - get_general_audience_percent()) * 0.5
+
+	var matched_pref := 0.0
+	for kink in stream_kinks:
+		matched_pref += audience_preferences.get(kink, 0.0)
+
+	# General audience gives 50% engagement to any content
+	var general_contribution := get_general_audience_percent() * 0.5
+
+	return matched_pref + general_contribution
+
+
+func shift_audience_preferences(stream_kinks: Array, shift_amount: float = 0.05) -> void:
+	## Shift audience preferences toward the kinks in this stream
+	## shift_amount: How much to shift (default 5%)
+	if stream_kinks.is_empty():
+		return
+
+	var general_percent := get_general_audience_percent()
+
+	# Take from general audience first, then proportionally from other kinks
+	var shift_per_kink := shift_amount / stream_kinks.size()
+
+	for kink in stream_kinks:
+		if not audience_preferences.has(kink):
+			continue
+
+		# Calculate how much we can actually shift
+		var available_shift := minf(shift_per_kink, general_percent + _get_other_kink_total(kink))
+		audience_preferences[kink] = minf(1.0, audience_preferences[kink] + available_shift)
+
+	# Normalize to ensure total doesn't exceed 1.0
+	_normalize_audience_preferences()
+
+
+func _get_other_kink_total(exclude_kink: String) -> float:
+	## Get total preference for all kinks except the specified one
+	var total := 0.0
+	for kink in audience_preferences:
+		if kink != exclude_kink:
+			total += audience_preferences[kink]
+	return total
+
+
+func _normalize_audience_preferences() -> void:
+	## Ensure audience preferences don't exceed 1.0 total
+	var total := 0.0
+	for pref in audience_preferences.values():
+		total += pref
+
+	if total > 1.0:
+		# Scale down proportionally
+		for kink in audience_preferences:
+			audience_preferences[kink] = audience_preferences[kink] / total
 
 
 func update_lactation_status() -> void:
@@ -364,6 +496,105 @@ func get_stomach_space() -> int:
 	return stomach_capacity - stomach_fullness
 
 
+# =============================================================================
+# BODY SIZE SYSTEM
+# =============================================================================
+
+## Size tier thresholds (same for all body parts)
+const SIZE_TIER_THRESHOLDS := [0, 11, 26, 51, 81, 121]
+
+## Belly tier labels
+const BELLY_TIER_LABELS := ["Flat", "Soft", "Pudgy", "Round", "Huge", "Immense"]
+
+## Bust tier labels
+const BUST_TIER_LABELS := ["Modest", "Perky", "Full", "Heavy", "Massive", "Enormous"]
+
+## Hip tier labels (for future use)
+const HIP_TIER_LABELS := ["Narrow", "Average", "Wide", "Thick", "Massive", "Immense"]
+
+
+func get_fat_distribution() -> Dictionary:
+	## Get fat distribution ratios from archetype (belly/bust/hips)
+	## Returns default 70/20/10 if no archetype or no distribution defined
+	var arch_data := get_archetype_data()
+	var dist: Dictionary = arch_data.get("fat_distribution", {})
+	return {
+		"belly": dist.get("belly", 0.70),
+		"bust": dist.get("bust", 0.20),
+		"hips": dist.get("hips", 0.10)
+	}
+
+
+func add_weight(amount: float) -> void:
+	## Add weight and distribute to body parts based on archetype
+	## amount: Weight to add (can be fractional for gradual gain)
+	weight += int(amount)
+
+	var dist := get_fat_distribution()
+	belly_fat += amount * dist["belly"]
+	bust_fat += amount * dist["bust"]
+	hips_fat += amount * dist["hips"]
+
+
+func get_belly_total() -> float:
+	## Get total belly size (fat + stuffed + pregnancy)
+	## stomach_fullness contributes temporary size, pregnancy adds based on bb_factor
+	var stuffed_contribution := stomach_fullness * 0.5  # Temporary bulge from food
+	var pregnancy_contribution := bb_factor * 30.0  # Each bb_factor level adds significant size
+	return belly_fat + stuffed_contribution + pregnancy_contribution
+
+
+func get_bust_total() -> float:
+	## Get total bust size (base + fat + milk)
+	var milk_contribution := 0.0
+	if milk_capacity > 0:
+		milk_contribution = (float(milk_current) / float(milk_capacity)) * 20.0  # Up to +20 when full
+	return bust_base + bust_fat + milk_contribution
+
+
+func get_hips_total() -> float:
+	## Get total hip size (just fat for now)
+	return hips_fat
+
+
+func _get_size_tier(value: float) -> int:
+	## Convert size value to tier (0-5)
+	for i in range(SIZE_TIER_THRESHOLDS.size() - 1, -1, -1):
+		if value >= SIZE_TIER_THRESHOLDS[i]:
+			return i
+	return 0
+
+
+func get_belly_tier() -> int:
+	## Get belly size tier (0-5)
+	return _get_size_tier(get_belly_total())
+
+
+func get_bust_tier() -> int:
+	## Get bust size tier (0-5)
+	return _get_size_tier(get_bust_total())
+
+
+func get_hips_tier() -> int:
+	## Get hip size tier (0-5)
+	return _get_size_tier(get_hips_total())
+
+
+func get_belly_label() -> String:
+	## Get descriptive label for belly size
+	return BELLY_TIER_LABELS[get_belly_tier()]
+
+
+func get_bust_label() -> String:
+	## Get descriptive label for bust size
+	return BUST_TIER_LABELS[get_bust_tier()]
+
+
+func get_hips_label() -> String:
+	## Get descriptive label for hip size
+	return HIP_TIER_LABELS[get_hips_tier()]
+
+
 func get_portrait_tier() -> int:
 	## Returns portrait tier (1-4) based on fullness percentage and bb_factor
 	## Higher bb_factor increases the tier
@@ -525,6 +756,10 @@ func to_dict() -> Dictionary:
 		"stomach_fullness": stomach_fullness,
 		"womb_capacity": womb_capacity,
 		"bb_factor": bb_factor,
+		"belly_fat": belly_fat,
+		"bust_base": bust_base,
+		"bust_fat": bust_fat,
+		"hips_fat": hips_fat,
 		"milk_capacity": milk_capacity,
 		"milk_current": milk_current,
 		"is_lactating": is_lactating,
@@ -542,6 +777,8 @@ func to_dict() -> Dictionary:
 		"followers": followers,
 		"last_stream_day": last_stream_day,
 		"last_socialize_day": last_socialize_day,
+		"kinks": kinks,
+		"audience_preferences": audience_preferences,
 		"burnout_charm_penalty": burnout_charm_penalty,
 		"burnout_days_remaining": burnout_days_remaining,
 		"inventory": inventory,
@@ -567,6 +804,10 @@ func from_dict(data: Dictionary) -> void:
 	stomach_fullness = data.get("stomach_fullness", 0)
 	womb_capacity = data.get("womb_capacity", 1)
 	bb_factor = data.get("bb_factor", 0)
+	belly_fat = data.get("belly_fat", 0.0)
+	bust_base = data.get("bust_base", 10.0)
+	bust_fat = data.get("bust_fat", 0.0)
+	hips_fat = data.get("hips_fat", 0.0)
 	milk_capacity = data.get("milk_capacity", 100)
 	milk_current = data.get("milk_current", 0)
 	is_lactating = data.get("is_lactating", false)
@@ -584,6 +825,16 @@ func from_dict(data: Dictionary) -> void:
 	followers = data.get("followers", 100)
 	last_stream_day = data.get("last_stream_day", 0)
 	last_socialize_day = data.get("last_socialize_day", 0)
+	kinks = data.get("kinks", [])
+	var loaded_prefs: Dictionary = data.get("audience_preferences", {})
+	# Ensure all kink keys exist with defaults
+	audience_preferences = {
+		"stuffing": loaded_prefs.get("stuffing", 0.0),
+		"pregnancy": loaded_prefs.get("pregnancy", 0.0),
+		"hyperpregnancy": loaded_prefs.get("hyperpregnancy", 0.0),
+		"lactation": loaded_prefs.get("lactation", 0.0),
+		"hucow": loaded_prefs.get("hucow", 0.0)
+	}
 	burnout_charm_penalty = data.get("burnout_charm_penalty", 0)
 	burnout_days_remaining = data.get("burnout_days_remaining", 0)
 	inventory = data.get("inventory", [])

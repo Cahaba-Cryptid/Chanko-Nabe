@@ -72,9 +72,9 @@ func _on_continue_game(slot: int) -> void:
 	_show_gameplay()
 
 
-func _on_archetype_selected(slot: int, archetype_id: String, player_name: String) -> void:
+func _on_archetype_selected(slot: int, archetype_id: String, player_name: String, starter_augment_id: String) -> void:
 	_current_slot = slot
-	_start_new_game(slot, archetype_id, player_name)
+	_start_new_game(slot, archetype_id, player_name, starter_augment_id)
 	_show_gameplay()
 
 
@@ -89,12 +89,13 @@ func _on_day_changed(_new_day: int) -> void:
 		print("Auto-saved to slot %s (Day %d)" % [SLOT_NAMES[_current_slot], _new_day])
 
 
-func _start_new_game(slot: int, archetype_id: String, player_name: String) -> void:
+func _start_new_game(slot: int, archetype_id: String, player_name: String, starter_augment_id: String = "") -> void:
 	# Clear existing game state
 	GameManager.characters.clear()
 	GameManager.money = 0
 	GameManager.current_day = 1
 	GameManager.reset_quota_state()  # Reset quota/debt system
+	GameManager.clear_recruitment_state()  # Reset recruitment system
 	TimeManager.current_hour = 8
 	TimeManager.current_minute = 0
 
@@ -121,11 +122,17 @@ func _start_new_game(slot: int, archetype_id: String, player_name: String) -> vo
 	player.daily_salary = 0
 	player.mood = 50
 	player.energy = 80
-	player.followers = 50
+	# Only set default followers if archetype didn't override
+	if player.followers == 100:  # Default value, archetype didn't change it
+		player.followers = 50
 
 	# Generate license number for Licensee archetype
 	if archetype_id == "licensee":
 		player.license_number = randi_range(1000, 9999)
+
+	# Apply starter augment for Cybergoth
+	if starter_augment_id != "":
+		_apply_starter_augment(player, starter_augment_id)
 
 	GameManager.add_character(player)
 
@@ -172,6 +179,37 @@ func _get_archetype_data(archetype_id: String) -> Dictionary:
 				if arch is Dictionary and arch.get("id", "") == archetype_id:
 					return arch
 	return {}
+
+
+func _apply_starter_augment(player: CharacterData, augment_id: String) -> void:
+	## Apply a starter augment to the player (Cybergoth only)
+	var file := FileAccess.open("res://data/dr_dan_items.json", FileAccess.READ)
+	if not file:
+		return
+
+	var json := JSON.new()
+	var err := json.parse(file.get_as_text())
+	file.close()
+	if err != OK or not json.data is Dictionary:
+		return
+
+	var items: Array = json.data.get("items", [])
+	for item in items:
+		if item is Dictionary and item.get("id", "") == augment_id:
+			# Add the augment to player
+			player.add_augment(item)
+
+			# Apply stat changes
+			var stat_changes: Dictionary = item.get("stat_changes", {})
+			if stat_changes.has("stomach_capacity"):
+				player.stomach_capacity += stat_changes["stomach_capacity"]
+			if stat_changes.has("milk_capacity"):
+				player.milk_capacity += stat_changes["milk_capacity"]
+			if stat_changes.has("womb_capacity"):
+				player.womb_capacity += stat_changes["womb_capacity"]
+
+			print("Applied starter augment: %s" % item.get("name", augment_id))
+			return
 
 
 func _save_game(slot: int) -> void:

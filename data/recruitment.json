@@ -1,0 +1,92 @@
+{
+	"ad_tiers": [
+		{
+			"id": "budget",
+			"name": "Budget Ad",
+			"description": "Basic listing on free classifieds. Attracts desperate applicants.",
+			"cost": 100,
+			"applicant_count": [1, 2],
+			"stat_range": [15, 40],
+			"salary_range": [25, 50],
+			"archetype_weights": {
+				"feeder": 0.4,
+				"glutton": 0.3,
+				"egirl": 0.2,
+				"broodmother": 0.1
+			},
+			"duration_days": 1
+		},
+		{
+			"id": "standard",
+			"name": "Standard Ad",
+			"description": "Promoted listing on talent boards. Decent variety of applicants.",
+			"cost": 500,
+			"applicant_count": [2, 4],
+			"stat_range": [25, 55],
+			"salary_range": [40, 80],
+			"archetype_weights": {
+				"feeder": 0.25,
+				"glutton": 0.25,
+				"egirl": 0.2,
+				"broodmother": 0.15,
+				"hucow": 0.1,
+				"cybergoth": 0.05
+			},
+			"duration_days": 2
+		},
+		{
+			"id": "premium",
+			"name": "Premium Ad",
+			"description": "Featured placement with talent agency connections. Quality applicants.",
+			"cost": 1500,
+			"applicant_count": [3, 5],
+			"stat_range": [40, 70],
+			"salary_range": [60, 120],
+			"archetype_weights": {
+				"feeder": 0.15,
+				"glutton": 0.2,
+				"egirl": 0.2,
+				"broodmother": 0.15,
+				"hucow": 0.15,
+				"cybergoth": 0.15
+			},
+			"duration_days": 3
+		},
+		{
+			"id": "elite",
+			"name": "Elite Headhunter",
+			"description": "Professional talent scouts find exceptional candidates. Expensive but worth it.",
+			"cost": 5000,
+			"applicant_count": [2, 3],
+			"stat_range": [55, 85],
+			"salary_range": [100, 200],
+			"archetype_weights": {
+				"feeder": 0.1,
+				"glutton": 0.15,
+				"egirl": 0.2,
+				"broodmother": 0.15,
+				"hucow": 0.2,
+				"cybergoth": 0.2
+			},
+			"duration_days": 3
+		}
+	],
+	"name_pools": {
+		"first_names": [
+			"Mika", "Yuki", "Hana", "Rei", "Sora", "Luna", "Nova", "Ivy",
+			"Jade", "Ruby", "Amber", "Coral", "Pearl", "Violet", "Scarlet",
+			"Lily", "Rose", "Daisy", "Iris", "Poppy", "Willow", "Sage",
+			"Cleo", "Zara", "Nyx", "Echo", "Lyra", "Vega", "Stella",
+			"Pixie", "Fawn", "Dove", "Wren", "Lark", "Finch", "Robin"
+		],
+		"last_names": [
+			"Bell", "Moon", "Star", "Cloud", "Storm", "Dawn", "Dusk",
+			"Frost", "Snow", "Bloom", "Vale", "Brook", "Rivers", "Woods",
+			"Stone", "Steel", "Chrome", "Spark", "Flash", "Blaze", "Ember",
+			"Hart", "Fox", "Wolf", "Hawk", "Crane", "Swan", "Raven"
+		]
+	},
+	"signing_bonus_range": [50, 200],
+	"max_applicant_pool": 10,
+	"applicant_decay_days": 5
+}

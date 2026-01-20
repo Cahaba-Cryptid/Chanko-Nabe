@@ -9,6 +9,8 @@ signal quota_status_changed()
 signal grace_period_started(shortfall: int, late_fee: int)
 signal grace_period_ended(success: bool)
 signal game_over_debt()
+signal applicant_pool_changed()
+signal ad_status_changed()
 
 # Economy constants
 const CAMMTEC_CUT_PERCENT := 0.40  # CammTec takes 40% of all streaming income
@@ -50,6 +52,11 @@ var late_fee_count: int = 0  # How many times player has paid late fees (escalat
 
 var characters: Array[Resource] = []
 var locations: Array[Resource] = []
+
+# Recruitment system
+var applicant_pool: Array[Dictionary] = []  # Pending applicants
+var active_ads: Array[Dictionary] = []  # Currently running ads
+var _recruitment_data: Dictionary = {}  # Cached recruitment.json data
 
 # Station configuration (modifiable for upgrades)
 var station_data := {
@@ -253,6 +260,9 @@ func _process_daily_events() -> void:
 		if character.has_method("process_daily"):
 			character.process_daily()
 
+	# Process recruitment (ad expiry, applicant decay)
+	process_recruitment_daily()
+
 
 func add_character(character: Resource) -> void:
 	if character not in characters:
@@ -269,7 +279,7 @@ func get_character_count() -> int:
 
 func save_game(slot: int = 0) -> bool:
 	var save_data := {
-		"version": 2,
+		"version": 3,
 		"money": money,
 		"current_day": current_day,
 		"time": {
@@ -286,6 +296,10 @@ func save_game(slot: int = 0) -> bool:
 			"grace_shortfall": grace_shortfall,
 			"grace_late_fee": grace_late_fee,
 			"late_fee_count": late_fee_count
+		},
+		"recruitment": {
+			"applicant_pool": applicant_pool,
+			"active_ads": active_ads
 		},
 		"station_data": station_data,
 		"characters": []
@@ -356,6 +370,17 @@ func load_game(slot: int = 0) -> bool:
 		if station_data.has(station_name):
 			station_data[station_name] = saved_stations[station_name]
 
+	# Load recruitment state
+	var recruitment_data: Dictionary = save_data.get("recruitment", {})
+	applicant_pool = []
+	for app in recruitment_data.get("applicant_pool", []):
+		applicant_pool.append(app)
+	active_ads = []
+	for ad in recruitment_data.get("active_ads", []):
+		active_ads.append(ad)
+	applicant_pool_changed.emit()
+	ad_status_changed.emit()
+
 	# Load characters
 	var char_data_array: Array = save_data.get("characters", [])
 	characters.clear()
@@ -379,3 +404,281 @@ func delete_save(slot: int = 0) -> bool:
 		var err := DirAccess.remove_absolute(save_path)
 		return err == OK
 	return false
+
+
+# =============================================================================
+# RECRUITMENT SYSTEM
+# =============================================================================
+
+func _load_recruitment_data() -> Dictionary:
+	## Load and cache recruitment.json data
+	if not _recruitment_data.is_empty():
+		return _recruitment_data
+
+	var file := FileAccess.open("res://data/recruitment.json", FileAccess.READ)
+	if file:
+		var json := JSON.new()
+		if json.parse(file.get_as_text()) == OK:
+			_recruitment_data = json.data
+		file.close()
+	return _recruitment_data
+
+
+func get_ad_tiers() -> Array:
+	## Returns array of ad tier data
+	var data := _load_recruitment_data()
+	return data.get("ad_tiers", [])
+
+
+func get_ad_tier(tier_id: String) -> Dictionary:
+	## Returns a specific ad tier by ID
+	for tier in get_ad_tiers():
+		if tier.get("id", "") == tier_id:
+			return tier
+	return {}
+
+
+func place_recruitment_ad(tier_id: String) -> bool:
+	## Place an ad to attract applicants. Returns true if successful.
+	var tier := get_ad_tier(tier_id)
+	if tier.is_empty():
+		return false
+
+	var cost: int = tier.get("cost", 0)
+	if not can_afford(cost):
+		return false
+
+	spend_money(cost)
+
+	# Create active ad
+	var ad := {
+		"tier_id": tier_id,
+		"days_remaining": tier.get("duration_days", 1),
+		"placed_day": current_day
+	}
+	active_ads.append(ad)
+
+	# Generate applicants immediately for this ad
+	_generate_applicants_for_ad(tier)
+
+	ad_status_changed.emit()
+	print("Placed %s ad for $%d" % [tier.get("name", tier_id), cost])
+	return true
+
+
+func _generate_applicants_for_ad(tier: Dictionary) -> void:
+	## Generate applicants based on ad tier
+	var data := _load_recruitment_data()
+	var max_pool: int = data.get("max_applicant_pool", 10)
+
+	# Check pool limit
+	if applicant_pool.size() >= max_pool:
+		print("Applicant pool full - new applicants rejected")
+		return
+
+	var count_range: Array = tier.get("applicant_count", [1, 2])
+	var applicant_count := randi_range(count_range[0], count_range[1])
+
+	for _i in range(applicant_count):
+		if applicant_pool.size() >= max_pool:
+			break
+
+		var applicant := _generate_applicant(tier)
+		applicant_pool.append(applicant)
+
+	applicant_pool_changed.emit()
+	print("Generated %d new applicants" % applicant_count)
+
+
+func _generate_applicant(tier: Dictionary) -> Dictionary:
+	## Generate a single applicant based on tier settings
+	var data := _load_recruitment_data()
+	var name_pools: Dictionary = data.get("name_pools", {})
+	var first_names: Array = name_pools.get("first_names", ["Talent"])
+	var last_names: Array = name_pools.get("last_names", ["Unknown"])
+
+	var stat_range: Array = tier.get("stat_range", [30, 50])
+	var salary_range: Array = tier.get("salary_range", [40, 80])
+	var archetype_weights: Dictionary = tier.get("archetype_weights", {"feeder": 1.0})
+
+	# Generate name
+	var first_name: String = first_names[randi() % first_names.size()]
+	var last_name: String = last_names[randi() % last_names.size()]
+	var display_name := "%s %s" % [first_name, last_name]
+
+	# Pick archetype based on weights
+	var archetype_id := _pick_weighted_archetype(archetype_weights)
+
+	# Generate stats within range
+	var stat_min: int = stat_range[0]
+	var stat_max: int = stat_range[1]
+	var charm := randi_range(stat_min, stat_max)
+	var talent := randi_range(stat_min, stat_max)
+	var stamina := randi_range(stat_min, stat_max)
+	var style := randi_range(stat_min, stat_max)
+
+	# Adjust stats based on archetype weights
+	var arch_data := CharacterData._get_archetype_data(archetype_id)
+	var stat_weights: Dictionary = arch_data.get("stat_weights", {})
+	if stat_weights.has("charm"):
+		charm = int(charm * (1.0 + stat_weights["charm"] * 0.3))
+	if stat_weights.has("talent"):
+		talent = int(talent * (1.0 + stat_weights["talent"] * 0.3))
+	if stat_weights.has("stamina"):
+		stamina = int(stamina * (1.0 + stat_weights["stamina"] * 0.3))
+	if stat_weights.has("style"):
+		style = int(style * (1.0 + stat_weights["style"] * 0.3))
+
+	# Clamp stats
+	charm = clampi(charm, 1, 100)
+	talent = clampi(talent, 1, 100)
+	stamina = clampi(stamina, 1, 100)
+	style = clampi(style, 1, 100)
+
+	# Generate salary demand
+	var base_salary := randi_range(salary_range[0], salary_range[1])
+	var stat_avg := (charm + talent + stamina + style) / 4.0
+	var salary_modifier := stat_avg / 50.0  # Higher stats = higher salary demand
+	var daily_salary := int(base_salary * salary_modifier)
+
+	# Generate starting followers (lower tier = fewer followers)
+	var stat_max_value: int = stat_range[1]
+	var followers: int = randi_range(50, 200) * (stat_max_value / 40)
+
+	# Signing bonus range
+	var bonus_range: Array = data.get("signing_bonus_range", [50, 200])
+	var signing_bonus := randi_range(bonus_range[0], bonus_range[1])
+
+	return {
+		"id": "applicant_%d_%d" % [current_day, randi()],
+		"display_name": display_name,
+		"archetype_id": archetype_id,
+		"charm": charm,
+		"talent": talent,
+		"stamina": stamina,
+		"style": style,
+		"daily_salary": daily_salary,
+		"signing_bonus": signing_bonus,
+		"followers": followers,
+		"applied_day": current_day,
+		"tier_id": tier.get("id", "unknown")
+	}
+
+
+func _pick_weighted_archetype(weights: Dictionary) -> String:
+	## Pick an archetype based on weighted probabilities
+	var total := 0.0
+	for w in weights.values():
+		total += w
+
+	var roll := randf() * total
+	var cumulative := 0.0
+
+	for archetype_id in weights:
+		cumulative += weights[archetype_id]
+		if roll <= cumulative:
+			return archetype_id
+
+	# Fallback
+	return weights.keys()[0] if not weights.is_empty() else "feeder"
+
+
+func hire_applicant(applicant: Dictionary) -> CharacterData:
+	## Hire an applicant, converting them to a full CharacterData
+	var signing_bonus: int = applicant.get("signing_bonus", 0)
+	if not can_afford(signing_bonus):
+		return null
+
+	spend_money(signing_bonus)
+
+	# Create character from applicant data
+	var character := CharacterData.new()
+	character.id = "npc_%d_%d" % [current_day, randi()]
+	character.display_name = applicant.get("display_name", "New Hire")
+	character.is_player = false
+	character.archetype_id = applicant.get("archetype_id", "feeder")
+
+	# Set stats
+	character.charm = applicant.get("charm", 30)
+	character.talent = applicant.get("talent", 30)
+	character.stamina = applicant.get("stamina", 30)
+	character.style = applicant.get("style", 30)
+	character.daily_salary = applicant.get("daily_salary", 50)
+	character.followers = applicant.get("followers", 100)
+
+	# Apply archetype bonuses
+	character.apply_archetype_creation_bonuses()
+
+	# Set initial state
+	character.mood = 70
+	character.energy = 100
+	character.fatigue = 0
+
+	# Add to roster
+	add_character(character)
+
+	# Remove from applicant pool
+	applicant_pool.erase(applicant)
+	applicant_pool_changed.emit()
+
+	print("Hired %s (Salary: $%d/day, Signing bonus: $%d)" % [
+		character.display_name, character.daily_salary, signing_bonus
+	])
+
+	return character
+
+
+func reject_applicant(applicant: Dictionary) -> void:
+	## Remove an applicant from the pool
+	applicant_pool.erase(applicant)
+	applicant_pool_changed.emit()
+
+
+func process_recruitment_daily() -> void:
+	## Called at end of day - decay ads and applicants
+	var data := _load_recruitment_data()
+	var decay_days: int = data.get("applicant_decay_days", 5)
+
+	# Process active ads
+	var expired_ads: Array[Dictionary] = []
+	for ad in active_ads:
+		ad["days_remaining"] -= 1
+		if ad["days_remaining"] <= 0:
+			expired_ads.append(ad)
+
+	for ad in expired_ads:
+		active_ads.erase(ad)
+		print("Ad expired: %s" % ad.get("tier_id", "unknown"))
+
+	if not expired_ads.is_empty():
+		ad_status_changed.emit()
+
+	# Decay old applicants
+	var expired_applicants: Array[Dictionary] = []
+	for applicant in applicant_pool:
+		var days_waiting: int = current_day - applicant.get("applied_day", current_day)
+		if days_waiting >= decay_days:
+			expired_applicants.append(applicant)
+
+	for applicant in expired_applicants:
+		applicant_pool.erase(applicant)
+		print("Applicant left: %s" % applicant.get("display_name", "Unknown"))
+
+	if not expired_applicants.is_empty():
+		applicant_pool_changed.emit()
+
+
+func get_applicant_days_remaining(applicant: Dictionary) -> int:
+	## Returns how many days before applicant leaves
+	var data := _load_recruitment_data()
+	var decay_days: int = data.get("applicant_decay_days", 5)
+	var days_waiting: int = current_day - applicant.get("applied_day", current_day)
+	return maxi(0, decay_days - days_waiting)
+
+
+func clear_recruitment_state() -> void:
+	## Reset recruitment state for new game
+	applicant_pool.clear()
+	active_ads.clear()
+	applicant_pool_changed.emit()
+	ad_status_changed.emit()

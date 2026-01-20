@@ -95,6 +95,8 @@ func _refresh_display() -> void:
 		# Physical stats
 		_add_stat_label("Stomach", character_data.stomach_fullness, "/%d" % character_data.stomach_capacity)
 		_add_stat_label("Weight", character_data.weight, " lbs")
+		_add_stat_label("Belly", -1, character_data.get_belly_label())
+		_add_stat_label("Bust", -1, character_data.get_bust_label())
 		_add_stat_label("", -1)  # Spacer
 		_add_stat_label("Salary", character_data.daily_salary, "/day")
 

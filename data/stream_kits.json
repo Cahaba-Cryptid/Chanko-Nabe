@@ -8,6 +8,8 @@
       "milk_price": 0,
       "base_duration": 120,
       "quality_multiplier": 1.0,
+      "required_kinks": [],
+      "stream_kinks": [],
       "contents": []
     },
     {
@@ -18,6 +20,8 @@
       "milk_price": 0,
       "base_duration": 150,
       "quality_multiplier": 1.3,
+      "required_kinks": [],
+      "stream_kinks": [],
       "contents": [
         {"id": "rice_ball", "quantity": 3},
         {"id": "energy_drink", "quantity": 2}
@@ -31,6 +35,8 @@
       "milk_price": 0,
       "base_duration": 180,
       "quality_multiplier": 1.5,
+      "required_kinks": [],
+      "stream_kinks": [],
       "contents": [
         {"id": "bento_standard", "quantity": 2},
         {"id": "milkshake", "quantity": 1},
@@ -45,6 +51,8 @@
       "milk_price": 0,
       "base_duration": 240,
       "quality_multiplier": 1.8,
+      "required_kinks": [],
+      "stream_kinks": [],
       "contents": [
         {"id": "bento_deluxe", "quantity": 2},
         {"id": "katsu_don", "quantity": 1},
@@ -60,6 +68,8 @@
       "milk_price": 0,
       "base_duration": 300,
       "quality_multiplier": 2.2,
+      "required_kinks": ["stuffing"],
+      "stream_kinks": ["stuffing"],
       "contents": [
         {"id": "mega_burger", "quantity": 2},
         {"id": "family_pack", "quantity": 1},
@@ -75,6 +85,8 @@
       "milk_price": 0,
       "base_duration": 360,
       "quality_multiplier": 3.0,
+      "required_kinks": ["stuffing"],
+      "stream_kinks": ["stuffing"],
       "contents": [
         {"id": "party_platter", "quantity": 1},
         {"id": "challenge_bowl", "quantity": 1},
@@ -91,6 +103,8 @@
       "base_duration": 180,
       "quality_multiplier": 1.6,
       "requires_lactating": true,
+      "required_kinks": ["lactation"],
+      "stream_kinks": ["lactation"],
       "contents": []
     },
     {
@@ -102,6 +116,8 @@
       "base_duration": 240,
       "quality_multiplier": 2.0,
       "requires_lactating": true,
+      "required_kinks": ["lactation"],
+      "stream_kinks": ["lactation", "stuffing"],
       "contents": [
         {"id": "pudding", "quantity": 2},
         {"id": "parfait", "quantity": 2}
@@ -116,6 +132,8 @@
       "base_duration": 300,
       "quality_multiplier": 2.8,
       "requires_lactating": true,
+      "required_kinks": ["hucow"],
+      "stream_kinks": ["hucow", "lactation"],
       "contents": [
         {"id": "protein_shake", "quantity": 3},
         {"id": "cheesecake", "quantity": 2}

@@ -16,6 +16,7 @@ const RelaxDialogScene := preload("res://scenes/ui/relax_dialog.tscn")
 const SaveLoadMenuScene := preload("res://scenes/ui/save_load_menu.tscn")
 const BingeDialogScene := preload("res://scenes/ui/binge_dialog.tscn")
 const StreamSetupDialogScene := preload("res://scenes/ui/stream_setup_dialog.tscn")
+const RecruitmentTerminalScene := preload("res://scenes/ui/recruitment_terminal.tscn")
 
 @onready var background: TextureRect = $Background
 @onready var zone1: PanelContainer = $Zone1  # Bottom panel - stations
@@ -97,6 +98,9 @@ var _pending_binge_character: CharacterData = null
 # Stream setup dialog
 var _stream_setup_dialog: StreamSetupDialog = null
 var _pending_stream_character: CharacterData = null
+
+# Recruitment terminal
+var _recruitment_terminal: RecruitmentTerminal = null
 
 # Pause display alternation
 const PAUSE_FLASH_INTERVAL := 1.0  # Seconds between alternating
@@ -368,6 +372,8 @@ func _close_all_menus() -> void:
 		_save_load_menu.close_menu()
 	if _binge_dialog and _binge_dialog.visible:
 		_binge_dialog.close_dialog()
+	if _recruitment_terminal and _recruitment_terminal.visible:
+		_recruitment_terminal.close_terminal()
 
 
 func _on_money_changed(_new_amount: int) -> void:
@@ -564,6 +570,8 @@ func _input(event: InputEvent) -> void:
 		return
 	if _binge_dialog and _binge_dialog.visible:
 		return
+	if _recruitment_terminal and _recruitment_terminal.visible:
+		return
 
 	# Pause toggles with Space
 	if event.is_action_pressed("pause"):
@@ -576,6 +584,13 @@ func _input(event: InputEvent) -> void:
 		_open_save_load_menu()
 		get_viewport().set_input_as_handled()
 		return
+
+	# R key opens recruitment terminal (from roster view only)
+	if event is InputEventKey and event.pressed and event.keycode == KEY_R:
+		if _menu_state == MenuState.ROSTER:
+			_open_recruitment_terminal()
+			get_viewport().set_input_as_handled()
+			return
 
 	# Don't process navigation while paused
 	if GameManager.is_paused:
@@ -999,6 +1014,21 @@ func _on_stream_started(stream_data: Dictionary) -> void:
 
 func _on_stream_dialog_closed() -> void:
 	_pending_stream_character = null
+	_update_selection_visuals()
+
+
+func _open_recruitment_terminal() -> void:
+	if not _recruitment_terminal:
+		_recruitment_terminal = RecruitmentTerminalScene.instantiate()
+		add_child(_recruitment_terminal)
+		_recruitment_terminal.terminal_closed.connect(_on_recruitment_terminal_closed)
+
+	_recruitment_terminal.open_terminal()
+
+
+func _on_recruitment_terminal_closed() -> void:
+	# Refresh character display in case we hired someone
+	refresh_characters()
 	_update_selection_visuals()
 
 

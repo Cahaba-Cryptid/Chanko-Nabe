@@ -118,6 +118,7 @@ func _refresh_kits_list() -> void:
 
 		# Grey out if can't afford or doesn't meet requirements
 		var can_use := true
+		var required_kinks: Array = kit.get("required_kinks", [])
 		if requires_lactating and not _character.is_lactating:
 			can_use = false
 		if price > 0 and price > GameManager.money:
@@ -126,6 +127,8 @@ func _refresh_kits_list() -> void:
 			var effective_milk := _get_effective_milk_value()
 			if milk_price > effective_milk:
 				can_use = false
+		if not required_kinks.is_empty() and not _character.has_required_kinks(required_kinks):
+			can_use = false
 
 		if not can_use:
 			btn.modulate = Color(0.5, 0.5, 0.5)
@@ -340,9 +343,14 @@ func _can_use_current_kit() -> bool:
 	var kit_price: int = _current_kit.get("price", 0)
 	var milk_price: int = _current_kit.get("milk_price", 0)
 	var requires_lactating: bool = _current_kit.get("requires_lactating", false)
+	var required_kinks: Array = _current_kit.get("required_kinks", [])
 
 	# Check lactation requirement
 	if requires_lactating and not _character.is_lactating:
+		return false
+
+	# Check kink requirements
+	if not required_kinks.is_empty() and not _character.has_required_kinks(required_kinks):
 		return false
 
 	# Check cash cost
@@ -555,7 +563,8 @@ func _start_stream() -> void:
 		"total_duration": base_duration + added_duration,
 		"quality_multiplier": quality_mult + extra_mult,
 		"total_fill": _get_kit_fill() + added_fill,
-		"milk_spent": milk_price
+		"milk_spent": milk_price,
+		"stream_kinks": _current_kit.get("stream_kinks", [])
 	}
 
 	# Clear stream items (they're now part of the stream, not returning to inventory)

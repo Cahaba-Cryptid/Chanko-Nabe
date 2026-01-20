@@ -472,6 +472,11 @@ func _complete_standard_task(character: CharacterData, station_name: String) -> 
 		pregnancy_bonus *= (1.0 + surrogacy_bonus)
 		raw_income *= (1.0 + pregnancy_bonus)
 
+	# Body size bonus: Bigger = better (+5% per belly tier, +5% per bust tier)
+	var belly_bonus := character.get_belly_tier() * 0.05
+	var bust_bonus := character.get_bust_tier() * 0.05
+	raw_income *= (1.0 + belly_bonus + bust_bonus)
+
 	# CammTec takes their cut (40%)
 	var after_cut := raw_income * (1.0 - GameManager.CAMMTEC_CUT_PERCENT)
 	# House always wins - round down to nearest 5
@@ -547,12 +552,17 @@ func _complete_stream_task(character: CharacterData) -> void:
 	var total_fill: int = stream_data.get("total_fill", 0)
 	var kit_contents: Array = stream_data.get("kit_contents", [])
 	var added_items: Array = stream_data.get("added_items", [])
+	var stream_kinks: Array = stream_data.get("stream_kinks", [])
 
 	# Calculate base income from followers
 	var follower_income := maxi(10, character.followers / 100)
 	var licensee_bonus := _get_licensee_effectiveness_bonus()
 	var effectiveness := character.get_effectiveness(licensee_bonus) / 100.0
 	var raw_income := follower_income * (0.5 + effectiveness) * quality_mult
+
+	# Audience match multiplier - how well stream content matches follower preferences
+	var audience_match := character.get_audience_match(stream_kinks)
+	raw_income *= audience_match
 
 	# Pregnancy bonus: BB factor increases stream income (+10% per BB)
 	if character.bb_factor > 0:
@@ -562,9 +572,17 @@ func _complete_stream_task(character: CharacterData) -> void:
 		pregnancy_bonus *= (1.0 + surrogacy_bonus)
 		raw_income *= (1.0 + pregnancy_bonus)
 
+	# Body size bonus: Bigger = better (+5% per belly tier, +5% per bust tier)
+	var belly_bonus := character.get_belly_tier() * 0.05
+	var bust_bonus := character.get_bust_tier() * 0.05
+	raw_income *= (1.0 + belly_bonus + bust_bonus)
+
 	# CammTec takes their cut (40%)
 	var after_cut := raw_income * (1.0 - GameManager.CAMMTEC_CUT_PERCENT)
-	var final_income := int(after_cut / 5) * 5  # Round down to nearest $5
+	var final_income := maxi(25, int(after_cut / 5) * 5)  # Round down to nearest $5, minimum $25
+
+	# Shift audience preferences toward this stream's kinks (5% per stream)
+	character.shift_audience_preferences(stream_kinks)
 
 	GameManager.add_money(final_income)
 	character.add_experience(15)
@@ -605,10 +623,10 @@ func _complete_stream_task(character: CharacterData) -> void:
 				capacity_gained = randi_range(1, 2)  # Less gain than binge
 				character.stomach_capacity += capacity_gained
 
-		# Weight gain from eating on stream
+		# Weight gain from eating on stream (distributes to body parts)
 		var weight_gained := total_fill / 50
 		if weight_gained > 0:
-			character.weight += weight_gained
+			character.add_weight(weight_gained)
 
 	# Followers gained from stream quality
 	var follower_gain := int(5 * quality_mult)
@@ -688,12 +706,12 @@ func _complete_binge_task(character: CharacterData) -> void:
 			capacity_gained = randi_range(1, 3)
 			character.stomach_capacity += capacity_gained
 
-	# Weight gain from eating - gain 1 lb per 50 fill consumed
+	# Weight gain from eating - gain 1 lb per 50 fill consumed (distributes to body parts)
 	# Feeder archetype reduces weight gain by 10%
 	var weight_reduction: float = character.get_archetype_passive("weight_gain_reduction", 0.0)
 	var weight_gained := int(float(total_fill) / 50.0 * (1.0 - weight_reduction))
 	if weight_gained > 0:
-		character.weight += weight_gained
+		character.add_weight(weight_gained)
 
 	# Build activity message
 	var activity_msg := "%s binged on %d items [-$%d] (filled %d)" % [character.display_name, items_eaten, GameManager.FEEDING_COST, actual_fill]
@@ -768,6 +786,8 @@ func _complete_dr_dan_task(character: CharacterData) -> void:
 				_apply_dr_dan_procedure(character, treatment, quantity)
 			"contract":
 				_apply_dr_dan_contract(character, treatment, quantity)
+			"kink":
+				_apply_dr_dan_kink(character, treatment)
 
 	# Clear pending treatments
 	character.pending_dr_dan_treatments.clear()
@@ -812,7 +832,7 @@ func _apply_dr_dan_procedure(character: CharacterData, item_data: Dictionary, qu
 			"stomach_capacity":
 				character.stomach_capacity += change
 			"weight":
-				character.weight += change
+				character.add_weight(change)
 
 
 func _apply_dr_dan_contract(character: CharacterData, item_data: Dictionary, quantity: int) -> void:
@@ -820,6 +840,13 @@ func _apply_dr_dan_contract(character: CharacterData, item_data: Dictionary, qua
 	var bb_gain: int = item_data.get("bb_factor_gain", 1)
 	var total_gain := bb_gain * quantity
 	character.bb_factor = mini(character.bb_factor + total_gain, character.womb_capacity)
+
+
+func _apply_dr_dan_kink(character: CharacterData, item_data: Dictionary) -> void:
+	## Unlock a kink for the character
+	var kink_id: String = item_data.get("kink_id", "")
+	if not kink_id.is_empty():
+		character.add_kink(kink_id)
 
 
 func _apply_dr_dan_augment(character: CharacterData, item_data: Dictionary) -> void:
@@ -856,7 +883,7 @@ func _apply_dr_dan_augment(character: CharacterData, item_data: Dictionary) -> v
 			"stomach_capacity":
 				character.stomach_capacity += change
 			"weight":
-				character.weight += change
+				character.add_weight(change)
 
 
 func _get_station_base_income(station_name: String) -> int:
