@@ -1,0 +1,131 @@
+{
+  "ranks": [
+    {
+      "id": "beginner",
+      "name": "Beginner",
+      "entry_fee": 50,
+      "prize_money": 150,
+      "prize_xp": 10,
+      "prize_followers": 50,
+      "difficulty": "easy"
+    },
+    {
+      "id": "amateur",
+      "name": "Amateur",
+      "entry_fee": 100,
+      "prize_money": 350,
+      "prize_xp": 20,
+      "prize_followers": 150,
+      "difficulty": "easy"
+    },
+    {
+      "id": "pro",
+      "name": "Pro",
+      "entry_fee": 250,
+      "prize_money": 800,
+      "prize_xp": 35,
+      "prize_followers": 400,
+      "difficulty": "medium"
+    },
+    {
+      "id": "elite",
+      "name": "Elite",
+      "entry_fee": 500,
+      "prize_money": 1500,
+      "prize_xp": 50,
+      "prize_followers": 1000,
+      "difficulty": "hard"
+    }
+  ],
+  "difficulty_settings": {
+    "easy": {
+      "reaction_delay": 0.8,
+      "decision_quality": 0.5,
+      "spite_factor": 0.0
+    },
+    "medium": {
+      "reaction_delay": 0.5,
+      "decision_quality": 0.75,
+      "spite_factor": 0.2
+    },
+    "hard": {
+      "reaction_delay": 0.25,
+      "decision_quality": 0.95,
+      "spite_factor": 0.4
+    }
+  },
+  "opponents": [
+    {
+      "id": "munch_mike",
+      "name": "Munch Mike",
+      "personality": "greedy",
+      "likes": ["fried", "rice"],
+      "dislikes": ["sweet", "soup"],
+      "capacity": 80,
+      "stuffing_skill": 1
+    },
+    {
+      "id": "bella_bites",
+      "name": "Bella Bites",
+      "personality": "sniper",
+      "likes": ["sweet", "noodles"],
+      "dislikes": ["grilled", "soup"],
+      "capacity": 70,
+      "stuffing_skill": 2
+    },
+    {
+      "id": "gordo_greg",
+      "name": "Gordo Greg",
+      "personality": "bully",
+      "likes": ["grilled", "soup"],
+      "dislikes": ["sweet", "rice"],
+      "capacity": 100,
+      "stuffing_skill": 1
+    },
+    {
+      "id": "tiny_tina",
+      "name": "Tiny Tina",
+      "personality": "cautious",
+      "likes": ["rice", "sweet"],
+      "dislikes": ["fried", "grilled"],
+      "capacity": 60,
+      "stuffing_skill": 3
+    },
+    {
+      "id": "chomper_charlie",
+      "name": "Chomper Charlie",
+      "personality": "greedy",
+      "likes": ["noodles", "grilled"],
+      "dislikes": ["rice", "sweet"],
+      "capacity": 90,
+      "stuffing_skill": 2
+    },
+    {
+      "id": "slurp_sally",
+      "name": "Slurp Sally",
+      "personality": "sniper",
+      "likes": ["soup", "noodles"],
+      "dislikes": ["fried", "grilled"],
+      "capacity": 75,
+      "stuffing_skill": 2
+    },
+    {
+      "id": "big_ben",
+      "name": "Big Ben",
+      "personality": "bully",
+      "likes": ["fried", "grilled"],
+      "dislikes": ["sweet", "noodles"],
+      "capacity": 120,
+      "stuffing_skill": 1
+    },
+    {
+      "id": "nibble_nancy",
+      "name": "Nibble Nancy",
+      "personality": "cautious",
+      "likes": ["sweet", "soup"],
+      "dislikes": ["fried", "noodles"],
+      "capacity": 65,
+      "stuffing_skill": 3
+    }
+  ]
+}

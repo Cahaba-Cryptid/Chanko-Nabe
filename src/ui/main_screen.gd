@@ -17,6 +17,9 @@ const SaveLoadMenuScene := preload("res://scenes/ui/save_load_menu.tscn")
 const BingeDialogScene := preload("res://scenes/ui/binge_dialog.tscn")
 const StreamSetupDialogScene := preload("res://scenes/ui/stream_setup_dialog.tscn")
 const RecruitmentTerminalScene := preload("res://scenes/ui/recruitment_terminal.tscn")
+const ContestSetupDialogScene := preload("res://scenes/ui/contest_setup_dialog.tscn")
+const ContestMinigameScene := preload("res://scenes/ui/contest_minigame.tscn")
+const PreferenceSelectionDialogScene := preload("res://scenes/ui/preference_selection_dialog.tscn")
 
 @onready var background: TextureRect = $Background
 @onready var zone1: PanelContainer = $Zone1  # Bottom panel - stations
@@ -101,6 +104,12 @@ var _pending_stream_character: CharacterData = null
 
 # Recruitment terminal
 var _recruitment_terminal: RecruitmentTerminal = null
+
+# Contest dialogs
+var _contest_setup_dialog: ContestSetupDialog = null
+var _contest_minigame: ContestMinigame = null
+var _preference_selection_dialog: PreferenceSelectionDialog = null
+var _pending_contest_character: CharacterData = null
 
 # Pause display alternation
 const PAUSE_FLASH_INTERVAL := 1.0  # Seconds between alternating
@@ -767,6 +776,11 @@ func _assign_character_to_station() -> void:
 			return
 		# Proceed with standard assignment (will fall through below)
 
+	# Special handling for Contest station - opens contest entry flow
+	if station_name == "Contest":
+		_open_contest(token.character_data)
+		return
+
 	# Standard station assignment
 	var duration := GameManager.get_station_duration(station_name)
 	token.character_data.current_task_id = station_name
@@ -1030,6 +1044,132 @@ func _on_recruitment_terminal_closed() -> void:
 	# Refresh character display in case we hired someone
 	refresh_characters()
 	_update_selection_visuals()
+
+
+# =============================================================================
+# CONTEST STATION
+# =============================================================================
+
+func _open_contest(character: CharacterData) -> void:
+	# Check if already competed today
+	if not character.can_enter_contest(TimeManager.current_day):
+		add_activity("%s already competed today!" % character.display_name)
+		return
+
+	_pending_contest_character = character
+
+	# Check if character has food preferences set
+	if not character.has_food_preferences():
+		# Open preference selection first
+		_open_preference_selection(character)
+	else:
+		# Go directly to contest setup
+		_open_contest_setup(character)
+
+
+func _open_preference_selection(character: CharacterData) -> void:
+	if not _preference_selection_dialog:
+		_preference_selection_dialog = PreferenceSelectionDialogScene.instantiate()
+		add_child(_preference_selection_dialog)
+		_preference_selection_dialog.preferences_selected.connect(_on_preferences_selected)
+		_preference_selection_dialog.dialog_cancelled.connect(_on_preference_dialog_cancelled)
+
+	_preference_selection_dialog.open_dialog(character)
+
+
+func _on_preferences_selected(likes: Array, dislikes: Array) -> void:
+	if not _pending_contest_character:
+		return
+
+	_pending_contest_character.set_food_preferences(likes, dislikes)
+	add_activity("%s set food preferences" % _pending_contest_character.display_name)
+
+	# Now open the contest setup
+	_open_contest_setup(_pending_contest_character)
+
+
+func _on_preference_dialog_cancelled() -> void:
+	_pending_contest_character = null
+	_update_selection_visuals()
+
+
+func _open_contest_setup(character: CharacterData) -> void:
+	if not _contest_setup_dialog:
+		_contest_setup_dialog = ContestSetupDialogScene.instantiate()
+		add_child(_contest_setup_dialog)
+		_contest_setup_dialog.contest_started.connect(_on_contest_entry_confirmed)
+		_contest_setup_dialog.dialog_closed.connect(_on_contest_setup_closed)
+
+	_contest_setup_dialog.open_dialog(character)
+
+
+func _on_contest_entry_confirmed(character: CharacterData, opponent: Dictionary, rank: Dictionary) -> void:
+	# Launch the minigame
+	if not _contest_minigame:
+		_contest_minigame = ContestMinigameScene.instantiate()
+		add_child(_contest_minigame)
+		_contest_minigame.contest_finished.connect(_on_contest_finished)
+		_contest_minigame.contest_cancelled.connect(_on_contest_cancelled)
+
+	_contest_minigame.start_contest(character, opponent, rank)
+
+
+func _on_contest_setup_closed() -> void:
+	_pending_contest_character = null
+	_update_selection_visuals()
+
+
+func _on_contest_finished(result: Dictionary) -> void:
+	if not _pending_contest_character:
+		return
+
+	var won: bool = result.get("won", false)
+	var player_score: int = result.get("player_score", 0)
+	var cpu_score: int = result.get("cpu_score", 0)
+
+	if won:
+		# Apply rewards
+		var money: int = result.get("money", 0)
+		var xp: int = result.get("xp", 0)
+		var followers: int = result.get("followers", 0)
+
+		GameManager.add_money(money)
+		_pending_contest_character.add_experience(xp)
+		_pending_contest_character.followers += followers
+
+		add_activity("%s won the contest! ($%d, +%d followers)" % [
+			_pending_contest_character.display_name, money, followers
+		])
+
+		if result.get("rank_up", false):
+			add_activity("%s unlocked a new contest rank!" % _pending_contest_character.display_name)
+	else:
+		if result.get("passed_out", false):
+			add_activity("%s passed out during the contest!" % _pending_contest_character.display_name)
+		else:
+			add_activity("%s lost the contest (%d vs %d)" % [
+				_pending_contest_character.display_name, player_score, cpu_score
+			])
+
+	# Show tolerance progress
+	var tolerance: Dictionary = result.get("tolerance_gained", {})
+	for category in tolerance:
+		var count: int = tolerance[category]
+		var progress := _pending_contest_character.get_tolerance_progress(category)
+		add_activity("  %s tolerance: %d/%d" % [category.capitalize(), progress, CharacterData.TOLERANCE_THRESHOLD])
+
+	_pending_contest_character = null
+	_close_character_detail()
+	_refresh_character_tokens()
+
+
+func _on_contest_cancelled() -> void:
+	# Entry fee was already paid, but contest was cancelled - refund?
+	# For now, just close without refund (penalty for quitting)
+	if _pending_contest_character:
+		add_activity("%s forfeited the contest" % _pending_contest_character.display_name)
+	_pending_contest_character = null
+	_close_character_detail()
 
 
 func _update_selection_visuals() -> void:

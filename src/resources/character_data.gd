@@ -107,6 +107,16 @@ class_name CharacterData
 @export var burnout_charm_penalty: int = 0  # Charm reduction from burnout (clears over time)
 @export var burnout_days_remaining: int = 0  # Days until burnout penalty clears
 
+# Contest / Food preferences
+@export_group("Contest")
+@export var food_likes: Array[String] = []  # 2 categories character likes (+50% points)
+@export var food_dislikes: Array[String] = []  # 2 categories character dislikes (-25% points, slowdown)
+@export var food_tolerance: Dictionary = {}  # Tracks progress toward neutralizing dislikes {category: count}
+@export var contest_rank: int = 0  # Current contest rank (0=beginner, 1=amateur, 2=pro, 3=elite)
+@export var contest_highest_rank: int = 0  # Highest rank beaten (unlocks next rank)
+@export var last_contest_day: int = -1  # Day of last contest attempt (one per day limit)
+@export var palate_enhancements: int = 0  # Number of Dr. Dan palate enhancements purchased (affects cost)
+
 
 ## Cached archetype data (loaded once per session)
 static var _archetype_cache: Dictionary = {}
@@ -759,6 +769,124 @@ func get_mood_text() -> String:
 		return "Miserable"
 
 
+# =============================================================================
+# CONTEST SYSTEM
+# =============================================================================
+
+const FOOD_CATEGORIES := ["fried", "rice", "noodles", "grilled", "sweet", "soup"]
+const TOLERANCE_THRESHOLD := 20  # Disliked foods eaten to neutralize a category
+
+
+func has_food_preferences() -> bool:
+	## Returns true if character has chosen their food preferences
+	return food_likes.size() >= 2 and food_dislikes.size() >= 2
+
+
+func set_food_preferences(likes: Array, dislikes: Array) -> void:
+	## Set character's food preferences (2 likes, 2 dislikes)
+	food_likes.clear()
+	food_dislikes.clear()
+	for like in likes:
+		food_likes.append(like)
+	for dislike in dislikes:
+		food_dislikes.append(dislike)
+
+
+func randomize_food_preferences() -> void:
+	## Randomly assign 2 likes and 2 dislikes for NPCs
+	var available := FOOD_CATEGORIES.duplicate()
+	available.shuffle()
+	food_likes.clear()
+	food_dislikes.clear()
+	food_likes.append(available[0])
+	food_likes.append(available[1])
+	food_dislikes.append(available[2])
+	food_dislikes.append(available[3])
+
+
+func get_food_preference(category: String) -> int:
+	## Returns preference for a food category: 1=like, 0=neutral, -1=dislike
+	if category in food_likes:
+		return 1
+	elif category in food_dislikes:
+		return -1
+	return 0
+
+
+func get_food_neutral_categories() -> Array[String]:
+	## Returns categories that are neither liked nor disliked
+	var neutral: Array[String] = []
+	for cat in FOOD_CATEGORIES:
+		if cat not in food_likes and cat not in food_dislikes:
+			neutral.append(cat)
+	return neutral
+
+
+func add_food_tolerance(category: String) -> bool:
+	## Add tolerance for eating a disliked food. Returns true if category was neutralized.
+	if category not in food_dislikes:
+		return false
+
+	if not food_tolerance.has(category):
+		food_tolerance[category] = 0
+
+	food_tolerance[category] += 1
+
+	if food_tolerance[category] >= TOLERANCE_THRESHOLD:
+		# Neutralize the category
+		food_dislikes.erase(category)
+		food_tolerance.erase(category)
+		return true
+
+	return false
+
+
+func get_tolerance_progress(category: String) -> int:
+	## Get tolerance progress for a disliked category (0 to TOLERANCE_THRESHOLD)
+	return food_tolerance.get(category, 0)
+
+
+func can_enhance_palate(category: String) -> bool:
+	## Returns true if category can be enhanced to liked (must be neutral)
+	return category not in food_likes and category not in food_dislikes
+
+
+func enhance_palate(category: String) -> bool:
+	## Upgrade a neutral category to liked via Dr. Dan. Returns true if successful.
+	if not can_enhance_palate(category):
+		return false
+	food_likes.append(category)
+	palate_enhancements += 1
+	return true
+
+
+func get_palate_enhancement_cost() -> int:
+	## Get cost for next palate enhancement (escalating)
+	match palate_enhancements:
+		0: return 500
+		1: return 1000
+		2: return 2000
+		3: return 4000
+		_: return 4000  # Max cost
+
+
+func can_enter_contest(current_day: int) -> bool:
+	## Returns true if character can enter a contest today
+	return last_contest_day != current_day
+
+
+func get_contest_hard_cap() -> int:
+	## Returns hard cap for contest (capacity + stuffing skill bonus)
+	# Stuffing skill is simulated as stamina/20 for now (1-5 range)
+	var stuffing_skill := maxi(1, stamina / 20)
+	return stomach_capacity + (stuffing_skill * 10)
+
+
+func get_contest_stuffing_skill() -> int:
+	## Returns stuffing skill level (1-5 based on stamina)
+	return maxi(1, stamina / 20)
+
+
 func can_eat(fill_amount: int) -> bool:
 	return get_stomach_space() >= fill_amount
 
@@ -916,7 +1044,14 @@ func to_dict() -> Dictionary:
 		"food_queue": food_queue,
 		"augments": augments,
 		"pending_dr_dan_treatments": pending_dr_dan_treatments,
-		"pending_stream_data": pending_stream_data
+		"pending_stream_data": pending_stream_data,
+		"food_likes": Array(food_likes),
+		"food_dislikes": Array(food_dislikes),
+		"food_tolerance": food_tolerance,
+		"contest_rank": contest_rank,
+		"contest_highest_rank": contest_highest_rank,
+		"last_contest_day": last_contest_day,
+		"palate_enhancements": palate_enhancements
 	}
 
 
@@ -973,3 +1108,15 @@ func from_dict(data: Dictionary) -> void:
 	augments = data.get("augments", [])
 	pending_dr_dan_treatments = data.get("pending_dr_dan_treatments", [])
 	pending_stream_data = data.get("pending_stream_data", {})
+	# Contest system
+	food_likes.clear()
+	for like in data.get("food_likes", []):
+		food_likes.append(like)
+	food_dislikes.clear()
+	for dislike in data.get("food_dislikes", []):
+		food_dislikes.append(dislike)
+	food_tolerance = data.get("food_tolerance", {})
+	contest_rank = data.get("contest_rank", 0)
+	contest_highest_rank = data.get("contest_highest_rank", 0)
+	last_contest_day = data.get("last_contest_day", -1)
+	palate_enhancements = data.get("palate_enhancements", 0)

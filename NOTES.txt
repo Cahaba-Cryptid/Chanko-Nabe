@@ -1,24 +1,25 @@
 ================================================================================
 CHANKO NABE - Design Notes
 ================================================================================
-Last Updated: 2026-01-20 (Session: Follower ranks + Dialogue system)
+Last Updated: 2026-01-22 (Session: Contest station implementation)
 
 Point Claude to this file at the start of each session for context.
 See TODO.txt for task tracking and implementation status.
 
 RECENT CHANGES:
-- Implemented dialogue system (DialogueManager autoload)
-  - Typewriter effect, skip/advance, speaker profiles
-  - Speakers: Vex, Dr. Dan, Vendi, Recruiter, System
-  - Tracks seen dialogues for one-time events
-  - Save/load integration
-- Implemented follower rank system (23 tiers from Nobody to Singularity)
-  - Followers are now the primary progression metric
-  - 3 acts tied to follower milestones and space upgrades
-  - Character detail panel shows formatted followers and rank
-- Extended body size tiers to 9 (0-8) for endgame content
-  - New tiers: Colossal, Titanic, Planetary (building to city-crushing scale)
-- Fixed "No Empty Slots" screen not allowing back navigation
+- Implemented contest station minigame (eating competition)
+  - ContestMinigame scene with dual conveyor belts, player/CPU sprites
+  - Food preference system: like (+50%), neutral, dislike (-25% + slowdown)
+  - Slowdown stacks from disliked food, decay over time
+  - CPU AI with 4 personality types: Greedy, Sniper, Bully, Cautious
+  - Difficulty scaling affects reaction speed and decision quality
+  - Visual tells: heart for liked, grimace for disliked (discovery mechanic)
+  - Capacity system with soft/hard caps, overstuffed mashing zone
+  - PreferenceSelectionDialog for first-time preference selection
+  - ContestSetupDialog for rank selection and entry
+  - Dr. Dan palate enhancements (neutral → liked, escalating cost)
+  - Data files: contest_foods.json, contest_opponents.json
+- Previous: Dialogue system, follower ranks, body size tiers
 
 ================================================================================
 GAME CONCEPT
@@ -524,6 +525,173 @@ Theme System:
 - Individual theme_override_* in scenes still work for exceptions
 
 ================================================================================
+CONTEST STATION (Eating Competition Minigame)
+================================================================================
+
+Head-to-head eating competition between player's streamer and a CPU opponent.
+
+CORE MECHANIC:
+- Two conveyor belts moving in opposite directions
+- Player (yellow oval) and CPU (black circle) positioned between belts
+- Each competitor has "home advantage" on one belt (items reach them first)
+- Grab food items as they pass, eat them for points
+- Competition ends when timer expires, most points wins
+
+BELT LAYOUT:
+    [BELT A - moving right →]  ← Player sees items first
+
+    🟡 Player          ⚫ CPU
+
+    [← BELT B - moving left]   ← CPU sees items first
+
+FOOD PREFERENCE SYSTEM:
+Three-tier preference adds strategic depth to item selection.
+
+| Reaction | Visual Tell | Points | Effect |
+|----------|-------------|--------|--------|
+| Like     | ❤️ heart    | +50%   | None |
+| Neutral  | Nothing     | Normal | None |
+| Dislike  | 😖 grimace  | -25%   | Brief slowdown |
+
+Discovery: CPU shows heart/grimace when eating, player learns their preferences
+by observation. Creates mini-game of intel gathering during competition.
+
+FOOD CATEGORIES:
+| Category | Examples |
+|----------|----------|
+| Fried    | Tempura, tonkatsu, karaage, fries |
+| Rice     | Onigiri, donburi, sushi |
+| Noodles  | Ramen, udon, soba, yakisoba |
+| Grilled  | Yakitori, yakiniku, grilled fish |
+| Sweet    | Mochi, dango, taiyaki |
+| Soup/Stew| Miso, curry, oden |
+
+SLOWDOWN STACKS:
+Eating disliked food applies slowdown stacks that decay over time.
+
+- Each disliked food eaten: +1 stack
+- Stacks reduce movement/grab speed
+- Stacks burn off one at a time over time
+- Single mistake: Minor setback
+- Multiple in a row: Significant slowdown window
+- Visual: Stack counter displayed near each competitor
+
+STRATEGIC DEPTH:
+- Sniping: Eat CPU's liked food to deny their bonus
+- Risk: Their liked food might be YOUR disliked (slowdown penalty)
+- Safe snipe: Their liked + your neutral = free denial
+- Trap recognition: Food CPU ignores might be disliked by both
+- Tempo dance: Exploit opponent's slowdown windows
+
+CPU BEHAVIOR:
+No visible "thinking" tells - CPU just acts.
+
+Base behaviors: Idle, Reaching, Eating, Slowed
+
+Decision factors:
+1. Is item liked/neutral/disliked?
+2. Which belt (home vs away)?
+3. Currently eating?
+4. Current stack count?
+5. Is player going for it?
+
+Personality types:
+| Type     | Behavior |
+|----------|----------|
+| Greedy   | Always grabs liked, usually grabs neutral, ignores disliked |
+| Sniper   | Only grabs liked, ignores rest (efficient, low risk) |
+| Bully    | Grabs liked + anything player wants (denial-focused) |
+| Cautious | Only grabs on home belt, never takes disliked |
+
+Difficulty scaling:
+| Level  | Reaction Speed | Decision Quality | Spite Factor |
+|--------|----------------|------------------|--------------|
+| Easy   | Slow           | Often ignores good items | None |
+| Medium | Moderate       | Mostly rational  | Occasional |
+| Hard   | Fast           | Optimal choices  | Reads patterns |
+
+WIN CONDITIONS:
+- Primary: Most food eaten when timer expires
+- Alternate formats: First to target amount (future complexity)
+
+CONTEST ECONOMY:
+
+Entry fees and prizes by rank:
+| Rank     | Entry Fee | Prize (Win) |
+|----------|-----------|-------------|
+| Beginner | $50       | $150 + XP + followers |
+| Amateur  | $100      | $350 + XP + followers |
+| Pro      | $250      | $800 + XP + followers |
+| Elite    | $500      | $1,500 + XP + followers |
+
+Outcomes:
+- Win: Prize money + experience + followers + tolerance progress
+- Lose: Tolerance progress only (entry fee lost, no other rewards)
+
+CONTEST PROGRESSION:
+- One attempt per character per day
+- Progression is per-character (each streamer climbs their own ladder)
+- Must beat current rank to unlock next rank
+- Higher ranks = harder CPU, better rewards
+
+PREFERENCE ASSIGNMENT:
+- Player characters: Choose 2 liked, 2 disliked at first contest entry
+- Hired NPCs: Random 2 liked, 2 disliked at creation
+- Remaining 2 categories are neutral
+- Preferences persist permanently
+
+PREFERENCE EVOLUTION:
+
+Grinding path (free):
+- Eating disliked food builds tolerance counter for that category
+- Threshold: 20 disliked foods eaten → dislike becomes neutral
+- Cannot grind past neutral
+- Tolerance progress kept even on contest loss
+
+Paid path (Dr. Dan):
+- Palate Enhancement: Neutral → Liked
+- Only works on neutral categories (must grind out dislike first)
+- Escalating cost per enhancement purchased:
+  | Enhancement # | Cost |
+  |---------------|------|
+  | 1st           | $500 |
+  | 2nd           | $1,000 |
+  | 3rd           | $2,000 |
+  | 4th           | $4,000 |
+
+Endgame vacuum: 6 liked categories (requires grinding + $7,500 total)
+
+CONTEST TIMING:
+- Duration: 90 seconds per contest
+
+CAPACITY SYSTEM:
+Streamer stats directly impact contest mechanics.
+
+Soft Cap = Capacity stat (e.g., 100)
+Hard Cap = Capacity + (Stuffing Skill * 10) (e.g., 120 at skill 2)
+
+| Zone | Fullness | Behavior | Bonus |
+|------|----------|----------|-------|
+| Normal | 0 to Soft Cap | Auto-swallow | None |
+| Overstuffed | Soft Cap to Hard Cap | Mash E to force swallow | +25% followers |
+| Pass Out | Beyond Hard Cap | Contest loss | N/A |
+
+Fan bonus: Flat +25% multiplier on followers earned while in overstuffed zone.
+The crowd loves watching someone push their limits. Requires active mashing
+to force food down, risks hitting hard cap. Higher stuffing skill = larger
+safe danger zone to play in.
+
+CPU OPPONENTS:
+- Fixed pre-made characters chosen randomly from a pool
+- Each has set personality, preferences, difficulty rating
+- Tournament mode (future): Bracket format with named opponents, adds flavor
+
+INTEGRATION WITH MAIN GAME:
+- Contest results provide experience, followers, income
+- Food preferences per character add identity
+- Capacity/stuffing directly affect contest performance ceiling
+
+================================================================================
 CURRENT STATE (see todo.txt for detailed implementation status)
 ================================================================================
 
@@ -535,11 +703,20 @@ Implemented Systems:
 - Progression: Follower ranks (23 tiers), act system (3 acts), formatted follower display
 - Kinks: Per-character kinks, audience preferences, stream requirements
 - Milk: Production, overflow, emergency self-milk, sticky warnings
-- Stations: Cam Studio, Dr. Dan's, Vendi Shop, Binge, Relax, Socialize, Milking, Contest (placeholder)
+- Stations: Cam Studio, Dr. Dan's, Vendi Shop, Binge, Relax, Socialize, Milking, Contest
 - Economy: CammTec 40% cut, income formula, feeding costs, minimum $25 payout
 - Quota/Debt: Weekly quotas, grace periods, late fees, game over on failure
 - Recruitment: Ad tiers, applicant pool, hiring with signing bonus
 - Dialogue: Typewriter effect, skip/advance, speaker profiles, seen tracking
+- Contest: Minigame with conveyor belts, CPU AI, food preferences, capacity system
+
+Contest System Files:
+- data/contest_foods.json - 24 foods across 6 categories
+- data/contest_opponents.json - 4 ranks, 8 opponents with personalities
+- src/ui/contest_minigame.gd - Main minigame logic
+- src/ui/preference_selection_dialog.gd - First-time preference selection
+- src/ui/contest_setup_dialog.gd - Rank/opponent preview
+- scenes/ui/contest_minigame.tscn, preference_selection_dialog.tscn, contest_setup_dialog.tscn
 
 Game Flow:
 - Main Menu → Archetype Selection → Name Entry → (Augment Choice for Cybergoth) → Save Slot → Gameplay
@@ -552,6 +729,7 @@ Controls (quick reference):
 - Space: Pause | Escape: Game menu | R: Recruitment terminal
 - A/D: Add/Remove (in dialogs) | Hold V: Confirm
 - Name entry: Full typing, Esc to go back
+- Contest: W/S move, E grab, Q quit
 
 Debug Keys (editor only):
 - F1: +$500 | F3/F4: Time speed

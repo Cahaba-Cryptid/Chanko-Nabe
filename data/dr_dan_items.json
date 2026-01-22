@@ -336,6 +336,72 @@
       "kink_id": "hucow",
       "requires_kink": "lactation",
       "image": ""
+    },
+    {
+      "id": "palate_fried",
+      "name": "Palate Enhancement: Fried Foods",
+      "description": "Taste bud modification to enjoy fried foods. Cost escalates with each enhancement.",
+      "price": 0,
+      "type": "palate",
+      "effect": "Fried Foods: Neutral → Liked",
+      "procedure_time": 60,
+      "food_category": "fried",
+      "image": ""
+    },
+    {
+      "id": "palate_rice",
+      "name": "Palate Enhancement: Rice Dishes",
+      "description": "Taste bud modification to enjoy rice dishes. Cost escalates with each enhancement.",
+      "price": 0,
+      "type": "palate",
+      "effect": "Rice Dishes: Neutral → Liked",
+      "procedure_time": 60,
+      "food_category": "rice",
+      "image": ""
+    },
+    {
+      "id": "palate_noodles",
+      "name": "Palate Enhancement: Noodles",
+      "description": "Taste bud modification to enjoy noodles. Cost escalates with each enhancement.",
+      "price": 0,
+      "type": "palate",
+      "effect": "Noodles: Neutral → Liked",
+      "procedure_time": 60,
+      "food_category": "noodles",
+      "image": ""
+    },
+    {
+      "id": "palate_grilled",
+      "name": "Palate Enhancement: Grilled Items",
+      "description": "Taste bud modification to enjoy grilled foods. Cost escalates with each enhancement.",
+      "price": 0,
+      "type": "palate",
+      "effect": "Grilled Items: Neutral → Liked",
+      "procedure_time": 60,
+      "food_category": "grilled",
+      "image": ""
+    },
+    {
+      "id": "palate_sweet",
+      "name": "Palate Enhancement: Sweets",
+      "description": "Taste bud modification to enjoy sweets. Cost escalates with each enhancement.",
+      "price": 0,
+      "type": "palate",
+      "effect": "Sweets: Neutral → Liked",
+      "procedure_time": 60,
+      "food_category": "sweet",
+      "image": ""
+    },
+    {
+      "id": "palate_soup",
+      "name": "Palate Enhancement: Soups & Stews",
+      "description": "Taste bud modification to enjoy soups and stews. Cost escalates with each enhancement.",
+      "price": 0,
+      "type": "palate",
+      "effect": "Soups & Stews: Neutral → Liked",
+      "procedure_time": 60,
+      "food_category": "soup",
+      "image": ""
     }
   ]
 }

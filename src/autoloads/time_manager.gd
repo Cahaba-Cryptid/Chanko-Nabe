@@ -779,6 +779,8 @@ func _complete_dr_dan_task(character: CharacterData) -> void:
 				_apply_dr_dan_contract(character, treatment, quantity)
 			"kink":
 				_apply_dr_dan_kink(character, treatment)
+			"palate":
+				_apply_dr_dan_palate(character, treatment)
 
 	# Clear pending treatments
 	character.pending_dr_dan_treatments.clear()
@@ -838,6 +840,19 @@ func _apply_dr_dan_kink(character: CharacterData, item_data: Dictionary) -> void
 	var kink_id: String = item_data.get("kink_id", "")
 	if not kink_id.is_empty():
 		character.add_kink(kink_id)
+
+
+func _apply_dr_dan_palate(character: CharacterData, item_data: Dictionary) -> void:
+	## Enhance palate - upgrade a neutral food category to liked
+	var food_category: String = item_data.get("food_category", "")
+	if food_category.is_empty():
+		return
+
+	if character.can_enhance_palate(food_category):
+		character.enhance_palate(food_category)
+		var msg := "%s now likes %s food!" % [character.display_name, food_category]
+		activity_logged.emit(msg)
+		print(msg)
 
 
 func _apply_dr_dan_augment(character: CharacterData, item_data: Dictionary) -> void:

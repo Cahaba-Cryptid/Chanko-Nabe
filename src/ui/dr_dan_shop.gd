@@ -157,6 +157,7 @@ func _get_item_price(item: Dictionary) -> int:
 	## Get the effective price for an item, applying archetype discounts for augments
 	## Cybergoth: -15% cost on cybernetic augments
 	## Breeder: -15% cost on genetic augments
+	## Palate enhancements have escalating cost based on character's enhancement count
 	var base_price: int = item.get("price", 0)
 	var item_type: String = item.get("type", "")
 
@@ -172,7 +173,37 @@ func _get_item_price(item: Dictionary) -> int:
 		if cost_reduction > 0.0:
 			base_price = int(float(base_price) * (1.0 - cost_reduction))
 
+	# Palate enhancements have escalating cost
+	if item_type == "palate" and _character:
+		# Count how many palate items are in cart
+		var palate_in_cart := _get_palate_items_in_cart_count()
+		var total_enhancements := _character.palate_enhancements + palate_in_cart
+		base_price = _character.get_palate_enhancement_cost()
+		# Adjust for items already in cart
+		for i in range(palate_in_cart):
+			match total_enhancements - palate_in_cart + i:
+				0: base_price = 500
+				1: base_price = 1000
+				2: base_price = 2000
+				_: base_price = 4000
+		# Get the actual next price
+		match total_enhancements:
+			0: base_price = 500
+			1: base_price = 1000
+			2: base_price = 2000
+			_: base_price = 4000
+
 	return base_price
+
+
+func _get_palate_items_in_cart_count() -> int:
+	## Count how many palate enhancement items are in the cart
+	var count := 0
+	for item_id in _cart:
+		for item in _items:
+			if item.get("id", "") == item_id and item.get("type", "") == "palate":
+				count += _cart.get(item_id, 0)
+	return count
 
 
 func _update_selection_visuals() -> void:
@@ -233,6 +264,16 @@ func _can_add_item(item: Dictionary) -> bool:
 			var prereq_in_cart := _is_kink_in_cart(requires_kink)
 			if not has_prereq and not prereq_in_cart:
 				return false
+
+	# Palate enhancements can only be purchased for neutral categories
+	if item_type == "palate" and _character:
+		var food_category: String = item.get("food_category", "")
+		# Can only enhance neutral categories (not liked, not disliked)
+		if not _character.can_enhance_palate(food_category):
+			return false
+		# Check if already in cart
+		if _cart.has(item_id):
+			return false
 
 	return true
 
@@ -565,6 +606,8 @@ func _checkout() -> void:
 					_apply_contract(purchase, quantity)
 				"kink":
 					_apply_kink(purchase)
+				"palate":
+					_apply_palate_enhancement(purchase)
 
 		var time_to_skip := int(total_procedure_time)
 		TimeManager.skip_time(time_to_skip)
@@ -639,6 +682,15 @@ func _apply_kink(item_data: Dictionary) -> void:
 	if kink_id.is_empty():
 		return
 	_character.add_kink(kink_id)
+
+
+func _apply_palate_enhancement(item_data: Dictionary) -> void:
+	## Upgrade a neutral food category to liked for the character
+	var food_category: String = item_data.get("food_category", "")
+	if food_category.is_empty():
+		return
+	if _character.enhance_palate(food_category):
+		TimeManager.activity_logged.emit("%s now loves %s!" % [_character.display_name, food_category.capitalize()])
 
 
 func _apply_augment(item_data: Dictionary) -> void:

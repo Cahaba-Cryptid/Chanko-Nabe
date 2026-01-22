@@ -1,0 +1,97 @@
+[gd_scene load_steps=3 format=3 uid="uid://prefselectiondlg"]
+
+[ext_resource type="Script" path="res://src/ui/preference_selection_dialog.gd" id="1_script"]
+[ext_resource type="Theme" path="res://theme/game_theme.tres" id="2_theme"]
+
+[node name="PreferenceSelectionDialog" type="PanelContainer"]
+theme = ExtResource("2_theme")
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -200.0
+offset_right = 250.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 15
+
+[node name="VBox" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Choose Food Preferences"
+horizontal_alignment = 1
+
+[node name="DescLabel" type="Label" parent="MarginContainer/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 12
+text = "Liked foods give +50% points. Disliked foods give -25% points and slow you down."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/VBox"]
+layout_mode = 2
+
+[node name="HBox" type="HBoxContainer" parent="MarginContainer/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 30
+
+[node name="LikesPanel" type="VBoxContainer" parent="MarginContainer/VBox/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="LikesLabel" type="Label" parent="MarginContainer/VBox/HBox/LikesPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
+text = "LIKES (choose 2)"
+horizontal_alignment = 1
+
+[node name="LikesList" type="VBoxContainer" parent="MarginContainer/VBox/HBox/LikesPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 4
+
+[node name="DislikesPanel" type="VBoxContainer" parent="MarginContainer/VBox/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="DislikesLabel" type="Label" parent="MarginContainer/VBox/HBox/DislikesPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.5, 0.5, 1)
+text = "DISLIKES (choose 2)"
+horizontal_alignment = 1
+
+[node name="DislikesList" type="VBoxContainer" parent="MarginContainer/VBox/HBox/DislikesPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 4
+
+[node name="HSeparator2" type="HSeparator" parent="MarginContainer/VBox"]
+layout_mode = 2
+
+[node name="HintLabel" type="Label" parent="MarginContainer/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+theme_override_font_sizes/font_size = 11
+text = "A/D: Switch | W/S: Select | E: Toggle | Q: Cancel"
+horizontal_alignment = 1
+
+[node name="ConfirmButton" type="Button" parent="MarginContainer/VBox"]
+layout_mode = 2
+disabled = true
+text = "Select 2 Likes & 2 Dislikes"

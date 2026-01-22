@@ -1,0 +1,173 @@
+{
+  "categories": ["fried", "rice", "noodles", "grilled", "sweet", "soup"],
+  "foods": [
+    {
+      "id": "tempura",
+      "name": "Tempura",
+      "category": "fried",
+      "points": 80,
+      "fill": 15
+    },
+    {
+      "id": "tonkatsu",
+      "name": "Tonkatsu",
+      "category": "fried",
+      "points": 100,
+      "fill": 25
+    },
+    {
+      "id": "karaage",
+      "name": "Karaage",
+      "category": "fried",
+      "points": 70,
+      "fill": 12
+    },
+    {
+      "id": "fries",
+      "name": "Fries",
+      "category": "fried",
+      "points": 50,
+      "fill": 10
+    },
+    {
+      "id": "onigiri",
+      "name": "Onigiri",
+      "category": "rice",
+      "points": 60,
+      "fill": 12
+    },
+    {
+      "id": "donburi",
+      "name": "Donburi",
+      "category": "rice",
+      "points": 120,
+      "fill": 30
+    },
+    {
+      "id": "sushi",
+      "name": "Sushi",
+      "category": "rice",
+      "points": 90,
+      "fill": 15
+    },
+    {
+      "id": "ochazuke",
+      "name": "Ochazuke",
+      "category": "rice",
+      "points": 70,
+      "fill": 18
+    },
+    {
+      "id": "ramen",
+      "name": "Ramen",
+      "category": "noodles",
+      "points": 110,
+      "fill": 28
+    },
+    {
+      "id": "udon",
+      "name": "Udon",
+      "category": "noodles",
+      "points": 90,
+      "fill": 22
+    },
+    {
+      "id": "soba",
+      "name": "Soba",
+      "category": "noodles",
+      "points": 80,
+      "fill": 18
+    },
+    {
+      "id": "yakisoba",
+      "name": "Yakisoba",
+      "category": "noodles",
+      "points": 85,
+      "fill": 20
+    },
+    {
+      "id": "yakitori",
+      "name": "Yakitori",
+      "category": "grilled",
+      "points": 65,
+      "fill": 10
+    },
+    {
+      "id": "yakiniku",
+      "name": "Yakiniku",
+      "category": "grilled",
+      "points": 100,
+      "fill": 22
+    },
+    {
+      "id": "grilled_fish",
+      "name": "Grilled Fish",
+      "category": "grilled",
+      "points": 85,
+      "fill": 18
+    },
+    {
+      "id": "kushikatsu",
+      "name": "Kushikatsu",
+      "category": "grilled",
+      "points": 75,
+      "fill": 14
+    },
+    {
+      "id": "mochi",
+      "name": "Mochi",
+      "category": "sweet",
+      "points": 55,
+      "fill": 8
+    },
+    {
+      "id": "dango",
+      "name": "Dango",
+      "category": "sweet",
+      "points": 50,
+      "fill": 10
+    },
+    {
+      "id": "taiyaki",
+      "name": "Taiyaki",
+      "category": "sweet",
+      "points": 65,
+      "fill": 12
+    },
+    {
+      "id": "dorayaki",
+      "name": "Dorayaki",
+      "category": "sweet",
+      "points": 60,
+      "fill": 11
+    },
+    {
+      "id": "miso_soup",
+      "name": "Miso Soup",
+      "category": "soup",
+      "points": 45,
+      "fill": 15
+    },
+    {
+      "id": "curry",
+      "name": "Curry",
+      "category": "soup",
+      "points": 100,
+      "fill": 25
+    },
+    {
+      "id": "oden",
+      "name": "Oden",
+      "category": "soup",
+      "points": 80,
+      "fill": 20
+    },
+    {
+      "id": "nikujaga",
+      "name": "Nikujaga",
+      "category": "soup",
+      "points": 90,
+      "fill": 22
+    }
+  ]
+}
