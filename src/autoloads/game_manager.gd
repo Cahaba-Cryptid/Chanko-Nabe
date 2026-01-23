@@ -1,6 +1,8 @@
 extends Node
 ## Main game manager singleton - handles global game state
 
+const VERSION := "0.4.0"
+
 signal money_changed(new_amount: int)
 signal day_changed(new_day: int)
 signal game_paused(is_paused: bool)
@@ -39,6 +41,9 @@ var is_paused: bool = false:
 		is_paused = value
 		game_paused.emit(is_paused)
 
+# Pause stack for nested dialogs - prevents stuck pause state
+var _pause_stack: Array[String] = []
+
 # Quota/Debt state
 var debt: int = STARTING_DEBT  # Total debt owed to CammTec
 var current_week: int = 1  # Which week we're in
@@ -58,6 +63,9 @@ var applicant_pool: Array[Dictionary] = []  # Pending applicants
 var active_ads: Array[Dictionary] = []  # Currently running ads
 var _recruitment_data: Dictionary = {}  # Cached recruitment.json data
 
+# Contest rivals (rejected draft picks who become top competitors)
+var contest_rivals: Array[CharacterData] = []
+
 # Station configuration (modifiable for upgrades)
 var station_data := {
 	"Cam Studio": { "slots": 2, "duration": 300.0 },      # 5 hours
@@ -71,7 +79,16 @@ var station_data := {
 
 
 func _ready() -> void:
-	pass
+	# Hide mouse cursor - this is a keyboard-only game
+	Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN)
+	# Disable mouse interaction on all Controls when nodes are added
+	get_tree().node_added.connect(_on_node_added)
+
+
+func _on_node_added(node: Node) -> void:
+	# Disable mouse interaction on all Control nodes
+	if node is Control:
+		node.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
 func get_station_slots(station_name: String) -> int:
@@ -267,6 +284,7 @@ func _process_daily_events() -> void:
 func add_character(character: Resource) -> void:
 	if character not in characters:
 		characters.append(character)
+		print("GameManager.add_character: total now %d" % characters.size())
 
 
 func remove_character(character: Resource) -> void:
@@ -275,6 +293,45 @@ func remove_character(character: Resource) -> void:
 
 func get_character_count() -> int:
 	return characters.size()
+
+
+func set_contest_rivals(rivals: Array[CharacterData]) -> void:
+	## Set the contest rivals (rejected draft picks)
+	contest_rivals = rivals
+	# Give them unique IDs as rivals
+	for i in range(contest_rivals.size()):
+		var rival: CharacterData = contest_rivals[i]
+		rival.id = "rival_%d" % i
+
+
+func get_contest_rivals() -> Array[CharacterData]:
+	return contest_rivals
+
+
+func get_rival_as_opponent(rival: CharacterData) -> Dictionary:
+	## Convert a rival CharacterData to a contest opponent dictionary format
+	# Map personality based on archetype tendencies
+	var personality := "greedy"  # Default
+	match rival.archetype_id:
+		"glutton":
+			personality = "greedy"
+		"egirl":
+			personality = "sniper"
+		"broodmother", "hucow":
+			personality = "cautious"
+		"cybergoth":
+			personality = "bully"
+
+	return {
+		"id": rival.id,
+		"name": rival.display_name,
+		"personality": personality,
+		"likes": rival.food_likes.duplicate(),
+		"dislikes": rival.food_dislikes.duplicate(),
+		"capacity": rival.stomach_capacity,
+		"stuffing_skill": rival.get_contest_stuffing_skill(),
+		"is_rival": true  # Flag to identify as a rival
+	}
 
 
 func save_game(slot: int = 0) -> bool:
@@ -303,12 +360,17 @@ func save_game(slot: int = 0) -> bool:
 		},
 		"dialogue": DialogueManager.get_save_data(),
 		"station_data": station_data,
-		"characters": []
+		"characters": [],
+		"contest_rivals": []
 	}
 
 	for character in characters:
 		if character.has_method("to_dict"):
 			save_data["characters"].append(character.to_dict())
+
+	for rival in contest_rivals:
+		if rival.has_method("to_dict"):
+			save_data["contest_rivals"].append(rival.to_dict())
 
 	var save_path := "user://save_%d.json" % slot
 	var file := FileAccess.open(save_path, FileAccess.WRITE)
@@ -393,6 +455,14 @@ func load_game(slot: int = 0) -> bool:
 		var character := CharacterData.new()
 		character.from_dict(char_dict)
 		characters.append(character)
+
+	# Load contest rivals
+	var rivals_data_array: Array = save_data.get("contest_rivals", [])
+	contest_rivals.clear()
+	for rival_dict in rivals_data_array:
+		var rival := CharacterData.new()
+		rival.from_dict(rival_dict)
+		contest_rivals.append(rival)
 
 	print("Game loaded from slot %d" % slot)
 	return true
@@ -614,6 +684,9 @@ func hire_applicant(applicant: Dictionary) -> CharacterData:
 	# Apply archetype bonuses
 	character.apply_archetype_creation_bonuses()
 
+	# NPCs get random food preferences for contests
+	character.randomize_food_preferences()
+
 	# Set initial state
 	character.mood = 70
 	character.energy = 100
@@ -687,3 +760,56 @@ func clear_recruitment_state() -> void:
 	active_ads.clear()
 	applicant_pool_changed.emit()
 	ad_status_changed.emit()
+
+
+# =============================================================================
+# UTILITY FUNCTIONS
+# =============================================================================
+
+static func load_json_array_string(json_array: Array) -> Array[String]:
+	## Safely load an untyped JSON array into a typed Array[String]
+	## Use this when loading string arrays from JSON to avoid type errors
+	var result: Array[String] = []
+	for item in json_array:
+		if item is String:
+			result.append(item)
+	return result
+
+
+static func load_json_array_dict(json_array: Array) -> Array[Dictionary]:
+	## Safely load an untyped JSON array into a typed Array[Dictionary]
+	var result: Array[Dictionary] = []
+	for item in json_array:
+		if item is Dictionary:
+			result.append(item)
+	return result
+
+
+# =============================================================================
+# PAUSE STACK SYSTEM
+# =============================================================================
+
+func push_pause(source: String) -> void:
+	## Call when opening a dialog/menu that should pause the game.
+	## Use a unique identifier for source (e.g., "binge_dialog", "save_menu").
+	if source not in _pause_stack:
+		_pause_stack.append(source)
+	is_paused = true
+
+
+func pop_pause(source: String) -> void:
+	## Call when closing a dialog/menu. Only unpauses if stack is empty.
+	_pause_stack.erase(source)
+	if _pause_stack.is_empty():
+		is_paused = false
+
+
+func clear_pause_stack() -> void:
+	## Emergency reset - use when returning to main menu or starting new game.
+	_pause_stack.clear()
+	is_paused = false
+
+
+func get_pause_stack() -> Array[String]:
+	## Debug: see what's currently holding the pause.
+	return _pause_stack.duplicate()

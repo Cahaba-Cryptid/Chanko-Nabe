@@ -51,12 +51,12 @@ func open_dialog(character: CharacterData) -> void:
 	_select_random_opponent()
 	_refresh_display()
 	show()
-	GameManager.is_paused = true
+	GameManager.push_pause("contest_setup_dialog")
 
 
 func close_dialog() -> void:
 	hide()
-	GameManager.is_paused = false
+	GameManager.pop_pause("contest_setup_dialog")
 	dialog_closed.emit()
 
 
@@ -65,7 +65,21 @@ func _select_random_opponent() -> void:
 		_selected_opponent = {}
 		return
 
-	# Pick a random opponent
+	# Check if we should use a rival at higher ranks (Pro/Elite)
+	var current_rank: Dictionary = _ranks[_selected_rank_index] if _selected_rank_index < _ranks.size() else {}
+	var rank_id: String = current_rank.get("id", "")
+
+	# Rivals appear at Pro and Elite ranks
+	if rank_id in ["pro", "elite"]:
+		var rivals := GameManager.get_contest_rivals()
+		if not rivals.is_empty():
+			# High chance to face a rival at top ranks
+			if randf() < 0.6:  # 60% chance to face a rival
+				var rival: CharacterData = rivals[randi() % rivals.size()]
+				_selected_opponent = GameManager.get_rival_as_opponent(rival)
+				return
+
+	# Otherwise pick a random regular opponent
 	_selected_opponent = _opponents[randi() % _opponents.size()]
 
 
@@ -109,6 +123,8 @@ func _refresh_rank_list() -> void:
 		rank_list.add_child(btn)
 
 	await get_tree().process_frame
+	if not is_instance_valid(self) or not visible:
+		return
 	_update_selection_visuals()
 
 
@@ -118,7 +134,10 @@ func _refresh_opponent_info() -> void:
 		stats_label.text = ""
 		return
 
-	opponent_label.text = "Opponent: %s" % _selected_opponent.get("name", "???")
+	var name_text: String = _selected_opponent.get("name", "???")
+	if _selected_opponent.get("is_rival", false):
+		name_text += " [RIVAL]"
+	opponent_label.text = "Opponent: %s" % name_text
 
 	var personality: String = _selected_opponent.get("personality", "unknown")
 	var likes: Array = _selected_opponent.get("likes", [])
@@ -163,8 +182,7 @@ func _update_entry_fee() -> void:
 
 
 func _update_hint() -> void:
-	var current_day: int = TimeManager.current_day if TimeManager else 0
-	var can_contest := _character.can_enter_contest(current_day)
+	var can_contest := _character.can_enter_contest(GameManager.current_day)
 
 	if not can_contest:
 		hint_label.text = "Already competed today! Come back tomorrow."
@@ -181,27 +199,38 @@ func _update_selection_visuals() -> void:
 			btn.grab_focus()
 
 
-func _unhandled_input(event: InputEvent) -> void:
+func _input(event: InputEvent) -> void:
 	if not visible:
 		return
 
 	var max_unlocked := _character.contest_highest_rank + 1
 
 	# Navigation
-	if event.is_action_pressed("ui_up") or event.is_action_pressed("move_up"):
+	if event.is_action_pressed("move_up"):
+		var old_index := _selected_rank_index
 		_selected_rank_index = maxi(0, _selected_rank_index - 1)
+		if old_index != _selected_rank_index:
+			_select_random_opponent()  # New opponent for new rank
 		_refresh_display()
-	elif event.is_action_pressed("ui_down") or event.is_action_pressed("move_down"):
-		_selected_rank_index = mini(max_unlocked, mini(_ranks.size() - 1, _selected_rank_index + 1))
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("move_down"):
+		var old_index := _selected_rank_index
+		var max_index := mini(max_unlocked, _ranks.size() - 1)
+		_selected_rank_index = mini(max_index, _selected_rank_index + 1)
+		if old_index != _selected_rank_index:
+			_select_random_opponent()  # New opponent for new rank
 		_refresh_display()
+		get_viewport().set_input_as_handled()
 
 	# Enter contest
-	if event.is_action_pressed("ui_accept") or event.is_action_pressed("interact"):
+	if event.is_action_pressed("accept"):
 		_try_enter_contest()
+		get_viewport().set_input_as_handled()
 
 	# Cancel
-	if event.is_action_pressed("ui_cancel") or event.is_action_pressed("back"):
+	if event.is_action_pressed("back"):
 		close_dialog()
+		get_viewport().set_input_as_handled()
 
 
 func _try_enter_contest() -> void:
@@ -216,16 +245,15 @@ func _try_enter_contest() -> void:
 		return
 
 	# Check if already competed today
-	var current_day: int = TimeManager.current_day if TimeManager else 0
-	if not _character.can_enter_contest(current_day):
+	if not _character.can_enter_contest(GameManager.current_day):
 		return
 
 	# Deduct entry fee
 	GameManager.add_money(-fee)
 
 	# Mark as competed today
-	_character.last_contest_day = current_day
+	_character.last_contest_day = GameManager.current_day
 
 	hide()
-	GameManager.is_paused = false
+	GameManager.pop_pause("contest_setup_dialog")
 	contest_started.emit(_character, _selected_opponent, rank)

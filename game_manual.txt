@@ -1,0 +1,365 @@
+================================================================================
+CHANKO NABE - Player's Guide
+================================================================================
+
+Welcome to Chanko Nabe, a dystopian management sim where you manage content
+creators for CammTec, the megacorporation that controls all online streaming.
+Make quota or face "relocation" to the asteroid mines.
+
+================================================================================
+CONTROLS
+================================================================================
+
+MENU NAVIGATION
+---------------
+W / S           Move up / down in menus
+A / D           Move left / right (or adjust quantities)
+E               Select / Accept / Confirm
+Q               Back / Cancel (hold to close all menus)
+
+GAMEPLAY
+--------
+Space           Pause / Unpause game time
+Escape          Open game menu (save/load, return to main menu)
+R               Open Recruitment Terminal (from roster screen)
+
+CONTEST MINIGAME
+----------------
+W / S           Move your character up / down between belts
+E               Grab food item
+Q               Quit contest (forfeit)
+
+NAME ENTRY
+----------
+Type normally to enter characters
+Backspace       Delete last character
+Escape          Go back to previous screen
+
+DEBUG KEYS (Editor Only)
+------------------------
+F1              Add $100
+F3              Double time speed
+F4              Halve time speed
+
+================================================================================
+GETTING STARTED
+================================================================================
+
+1. NEW GAME
+   - Select "New Game" from the main menu
+   - Choose an archetype (see ARCHETYPES section below)
+   - Enter your name
+   - Select a save slot (A, B, or C)
+   - Begin managing!
+
+2. YOUR GOAL
+   - Meet weekly quota by earning money from streaming
+   - Pay down your starting debt of $25,000
+   - Grow your streamers and business
+   - Avoid being sent to the mines!
+
+3. THE QUOTA SYSTEM
+   - Week 1 quota: $10,000 (escalates 20% each week)
+   - Quota tracks NET earnings (after CammTec's 40% cut)
+   - Meeting quota: Amount applies to debt, keep the excess
+   - Missing quota: 3-day grace period to pay shortfall + late fee
+   - Fail grace period: Game over (save deleted)
+
+================================================================================
+ARCHETYPES
+================================================================================
+
+Choose your starting archetype carefully - it determines your playstyle.
+
+GLUTTON
+  Focus: Eating content specialist
+  Stats: High Stamina, moderate Talent
+  Bonuses: +25% capacity training, -10% weight gain
+  Starting: $750
+
+BROODMOTHER
+  Focus: Surrogacy and pregnancy content
+  Stats: High Charm, moderate Stamina
+  Bonuses: +1 womb capacity, +15% pregnancy income, genetic augment bonuses
+  Starting: $750
+
+E-GIRL
+  Focus: Social media and followers
+  Stats: High Charm, high Style
+  Bonuses: -25% follower decay, +20% socializing gains
+  Starting: $750
+
+CYBERGOTH
+  Focus: Augmentation and endurance
+  Stats: High Style, moderate Talent
+  Bonuses: -20% energy/fatigue drain, -30% follower decay, cybernetic augment bonuses
+  Starting: $750
+
+HUCOW
+  Focus: Milk production and breeding
+  Stats: High Charm, high Stamina
+  Bonuses: Always lactating, +25% milk production, +15% milk value
+  Starting: $750
+
+LICENSEE
+  Focus: Management only (cannot perform)
+  Stats: Moderate Talent, moderate Charm
+  Bonuses: -10% NPC salaries, +10% NPC effectiveness
+  Starting: $2,000 + Draft Pick (choose 1 of 3 rookies)
+
+================================================================================
+THE MAIN SCREEN
+================================================================================
+
+ZONE 1 (Bottom) - The Block
+  - Visual representation of your streaming space
+  - Shows stations and characters
+
+ZONE 2 (Top Right) - Roster
+  - Character portraits and quick stats
+  - Select characters to view details or assign tasks
+  - Navigate with W/S, select with E
+
+ZONE 3 (Top Left) - Status Panel
+  - Current money
+  - Date and time
+  - Week quota progress (earned / target)
+  - Days remaining in week
+  - Total debt
+  - Color coding: Green (met), Gold (on track), Orange (behind), Red (critical)
+
+================================================================================
+STATIONS
+================================================================================
+
+Assign your streamers to stations to earn money, improve stats, or recover.
+
+CAM STUDIO
+  - Main income source
+  - Earnings based on stats, weight, and followers
+  - Builds fatigue
+
+BINGE STATION
+  - Feed your streamer to gain weight
+  - Costs money for food
+  - Bigger = better income
+
+RELAX STATION
+  - Recover fatigue (-20)
+  - Recover mood
+  - Essential for preventing burnout
+
+SOCIALIZE STATION
+  - Build followers
+  - Moderate fatigue cost
+
+MILKING STATION (Lactating characters only)
+  - Convert stored milk to income
+  - Requires: Hucow archetype, pregnancy, or lactation augment
+
+CONTEST STATION
+  - Enter eating competitions
+  - Win prizes, followers, experience
+  - One attempt per character per day
+
+DR. DAN'S SHOP
+  - Buy augments (permanent upgrades)
+  - Buy supplements (consumables)
+  - Purchase kink certifications
+  - Purchase pregnancy contracts
+
+VENDI SHOP
+  - Buy items and snacks
+  - Quick access to supplies
+
+================================================================================
+CHARACTER STATS
+================================================================================
+
+CORE STATS (0-100)
+  Charm     - Social appeal, viewer engagement
+  Talent    - Content quality, performance
+  Stamina   - Work capacity, fatigue resistance
+  Style     - Visual appeal, audience attraction
+
+PHYSICAL
+  Weight    - Current body weight (higher = more income)
+  Capacity  - How much they can eat in one session
+
+CONDITION
+  Hunger    - 0-100, affects mood and weight
+  Mood      - 0-100, affects performance (exhausted at 0)
+  Fatigue   - 0-100, builds from work, affects effectiveness
+  Followers - Audience size, determines rank
+
+================================================================================
+FATIGUE SYSTEM
+================================================================================
+
+Fatigue builds from completing activities:
+  Streaming:  15 fatigue
+  Contest:    20 fatigue
+  Socialize:  8 fatigue
+  Binge:      5 fatigue
+  Milking:    10 fatigue
+  Dr. Dan's:  3 fatigue
+  Relax:      0 fatigue (recovers -20)
+
+High Stamina reduces fatigue gain (up to 50% reduction at 100 Stamina).
+Cybergoth archetype gets additional -20% fatigue reduction.
+
+FATIGUE EFFECTS:
+  0-30:   No effect
+  31-60:  -10% effectiveness
+  61-80:  -25% effectiveness, mood starts to decay
+  81-99:  -50% effectiveness, faster mood decay
+  100:    Exhausted - can only use Relax station
+
+RECOVERY:
+  - Relax station: -20 fatigue
+  - End of day: -10 fatigue (overnight recovery)
+  - High mood (70+) while idle: slow fatigue recovery
+
+================================================================================
+CONTEST MINIGAME
+================================================================================
+
+Head-to-head eating competition on conveyor belts.
+
+SETUP:
+  - Choose your rank (Beginner, Amateur, Pro, Elite)
+  - Higher ranks = harder opponents, better prizes
+  - Pay entry fee, win prizes if victorious
+
+GAMEPLAY:
+  - Two belts move food in opposite directions
+  - Your belt (top): Items reach you first
+  - Opponent's belt (bottom): Items reach them first
+  - Move with W/S, grab food with E
+  - Most points when timer expires wins
+
+FOOD PREFERENCES:
+  Each character has liked and disliked food categories:
+  - Liked:    +50% points, heart symbol
+  - Neutral:  Normal points
+  - Disliked: -25% points, brief slowdown, grimace symbol
+
+  Categories: Fried, Rice, Noodles, Grilled, Sweet, Soup/Stew
+
+STRATEGY:
+  - Prioritize your liked foods
+  - Steal opponent's liked foods from their belt (risky if you dislike them)
+  - Avoid disliked foods - slowdown stacks hurt
+  - Watch opponent to learn their preferences
+
+CAPACITY:
+  - Soft cap = Capacity stat
+  - Hard cap = Capacity + (Stuffing skill * 10)
+  - Beyond soft cap: Must mash E to force swallow, +25% follower bonus
+  - Beyond hard cap: You pass out and lose!
+
+PROGRESSION:
+  - Win to unlock next rank
+  - Each character has their own progression
+  - Eating disliked foods builds tolerance (20 = dislike becomes neutral)
+  - Buy "Palate Enhancement" at Dr. Dan's to upgrade neutral to liked
+
+================================================================================
+FOLLOWER RANKS
+================================================================================
+
+Your followers determine your rank and unlock new opportunities.
+
+BEGINNER ERA (50 - 10,000)
+  Nobody (50) -> Newbie (100) -> Amateur (250) -> Hopeful (500) ->
+  Known (1,000) -> Rising (2,500) -> Notable (5,000) -> Popular (10,000)
+
+GROWING ERA (10,000 - 1,000,000)
+  Trending (25,000) -> Famous (50,000) -> Star (100,000) ->
+  Superstar (250,000) -> Icon (500,000) -> Millionaire (1,000,000)
+
+TRANSCENDENT ERA (1,000,000+)
+  Sensation (2.5M) -> Megastar (5M) -> Legend (10M) -> Global (25M) ->
+  Titan (50M) -> Planetary (100M) -> Continental (250M) ->
+  Deity (500M) -> Singularity (1B)
+
+================================================================================
+RECRUITMENT
+================================================================================
+
+Press R from the roster screen to open the Recruitment Terminal.
+
+AD TIERS:
+  Budget ($100):   1-2 applicants, stats 15-40, 1 day wait
+  Standard ($500): 2-4 applicants, stats 25-55, 2 days wait
+  Premium ($1,500): 3-5 applicants, stats 40-70, 3 days wait
+  Elite ($5,000):  2-3 applicants, stats 55-85, 3 days wait
+
+HIRING:
+  - Applicants wait 5 days before leaving
+  - Hiring costs a signing bonus ($50-200)
+  - Maximum 10 applicants in pool
+
+================================================================================
+KINK CERTIFICATIONS
+================================================================================
+
+Characters need certifications to perform certain content types.
+Purchase at Dr. Dan's Shop.
+
+  Stuffing ($300):       Required for stuffing streams
+  Pregnancy ($400):      Required for pregnancy content
+  Hyperpregnancy ($800): Requires pregnancy license first
+  Lactation ($350):      Required for milking/lactation streams
+  Hucow ($600):          Requires lactation license first
+
+================================================================================
+ECONOMY TIPS
+================================================================================
+
+INCOME:
+  - CammTec takes 40% of all earnings
+  - Bigger streamers earn more (weight multipliers)
+  - Pregnancy adds income bonuses per trimester
+  - Higher follower count = better stream earnings
+
+MANAGING COSTS:
+  - Food for binging costs money
+  - NPC streamers take salary cuts
+  - Entry fees for contests
+  - Augments and supplements
+
+SURVIVAL:
+  - Focus on meeting quota first
+  - Grow your streamers gradually
+  - Don't overextend on hiring
+  - Use Relax station to prevent burnout
+  - Contest wins can boost income significantly
+
+================================================================================
+SAVING AND LOADING
+================================================================================
+
+  - Press Escape during gameplay to open the game menu
+  - Save Game: Choose a slot to save your progress
+  - Load Game: Load a previous save
+  - Main Menu: Return to main menu (auto-saves first)
+  - Resume: Continue playing
+
+Save slots show: Day number, money, and timestamp
+
+================================================================================
+TIPS FOR SUCCESS
+================================================================================
+
+1. Watch your quota - the number in Zone 3 shows how far you are from target
+2. Manage fatigue - exhausted streamers can't work
+3. Balance growth with income - bigger is better but costs food
+4. Learn contest preferences - watch what opponents like/dislike
+5. Recruit strategically - don't hire more than you can manage
+6. Use the Relax station regularly - prevention beats cure
+7. Check follower ranks - more followers = better earnings
+
+Good luck, streamer. CammTec is watching.
+
+================================================================================

@@ -1,25 +1,30 @@
 ================================================================================
 CHANKO NABE - Design Notes
 ================================================================================
-Last Updated: 2026-01-22 (Session: Contest station implementation)
+Last Updated: 2026-01-22 (Session: Save system simplification + technical debt)
 
 Point Claude to this file at the start of each session for context.
 See TODO.txt for task tracking and implementation status.
 
-RECENT CHANGES:
-- Implemented contest station minigame (eating competition)
-  - ContestMinigame scene with dual conveyor belts, player/CPU sprites
-  - Food preference system: like (+50%), neutral, dislike (-25% + slowdown)
-  - Slowdown stacks from disliked food, decay over time
-  - CPU AI with 4 personality types: Greedy, Sniper, Bully, Cautious
-  - Difficulty scaling affects reaction speed and decision quality
-  - Visual tells: heart for liked, grimace for disliked (discovery mechanic)
-  - Capacity system with soft/hard caps, overstuffed mashing zone
-  - PreferenceSelectionDialog for first-time preference selection
-  - ContestSetupDialog for rank selection and entry
-  - Dr. Dan palate enhancements (neutral → liked, escalating cost)
-  - Data files: contest_foods.json, contest_opponents.json
-- Previous: Dialogue system, follower ranks, body size tiers
+RECENT CHANGES (v0.4.0):
+- Save system simplification:
+  - Removed 3-slot save system (A, B, C)
+  - Single auto-save file at user://save.dat
+  - Main menu: "Continue (Day X)" / "New Game" / "Options"
+  - New Game prompts "Your existing save will be overwritten" if save exists
+  - Esc pause menu simplified: "Main Menu" / "Resume" (no Save/Load)
+  - Old slot files auto-deleted on first launch (migration cleanup)
+  - Save format version 2 with quota, recruitment, station_data, contest_rivals
+  - Added v1 → v2 save migration (calculates week from day, initializes new fields)
+- Technical debt fixes (completed):
+  - Added GameManager.load_json_array_string() / load_json_array_dict() helpers
+  - Standardized all dialogs to use _input() with set_input_as_handled()
+  - Added centralized pause stack (push_pause/pop_pause/clear_pause_stack)
+  - Added is_instance_valid() safety checks after all await calls
+- Previous sessions (v0.3.0):
+  - UI/Input polish (mouse disable, Hold V confirm, keyboard-only)
+  - Licensee draft pick system
+  - Activity-based fatigue system
 
 ================================================================================
 GAME CONCEPT
@@ -139,7 +144,7 @@ E-GIRL (0.4/0.1/0.1/0.4) - Social media and follower focused
 - +20% socializing gains
 
 CYBERGOTH (0.1/0.3/0.2/0.4) - Augmentation and endurance
-- -20% energy drain on all tasks
+- -20% energy drain on all tasks (also applies to fatigue gain)
 - -30% follower decay
 - -15% cybernetic augment cost, +50% cybernetic augment effect
 
@@ -508,10 +513,11 @@ TECHNICAL DECISIONS
 - Target: PC (Windows primary)
 
 Save File Location:
-- Path: user://save_slot_X.dat (where X = A, B, or C)
+- Path: user://save.dat (single auto-save file)
 - Windows: %APPDATA%\Godot\app_userdata\ProjectCN\
 - In Godot Editor: Project → Open User Data Folder
-- Files: save_slot_A.dat, save_slot_B.dat, save_slot_C.dat
+- Auto-saves at start of each new day
+- Version 2 format includes: characters, quota state, recruitment, station_data, rivals
 
 Current autoloads:
 - GameManager - global state, money, characters, save/load
@@ -538,11 +544,11 @@ CORE MECHANIC:
 - Competition ends when timer expires, most points wins
 
 BELT LAYOUT:
-    [BELT A - moving right →]  ← Player sees items first
+	[BELT A - moving right →]  ← Player sees items first
 
-    🟡 Player          ⚫ CPU
+	🟡 Player          ⚫ CPU
 
-    [← BELT B - moving left]   ← CPU sees items first
+	[← BELT B - moving left]   ← CPU sees items first
 
 FOOD PREFERENCE SYSTEM:
 Three-tier preference adds strategic depth to item selection.
@@ -697,7 +703,7 @@ CURRENT STATE (see todo.txt for detailed implementation status)
 
 Implemented Systems:
 - Core: GameManager, TimeManager, DialogueManager, Save/Load, 3-zone UI, keyboard navigation
-- Characters: Stats, hunger/mood/fatigue, exhaustion/burnout, followers, kinks
+- Characters: Stats, hunger/mood/fatigue (activity-based), exhaustion/burnout, followers, kinks
 - Archetypes: All 6 with passive effects + starting bonuses + fat distribution
 - Body Size: Belly/bust/hips tracking, archetype-based fat distribution, size tiers
 - Progression: Follower ranks (23 tiers), act system (3 acts), formatted follower display
@@ -709,23 +715,26 @@ Implemented Systems:
 - Recruitment: Ad tiers, applicant pool, hiring with signing bonus
 - Dialogue: Typewriter effect, skip/advance, speaker profiles, seen tracking
 - Contest: Minigame with conveyor belts, CPU AI, food preferences, capacity system
+- Licensee: Draft pick system (3 rookies, pick 1, rivals from rejected)
+- Fatigue: Activity-based system with stamina modifier and effectiveness penalties
 
 Contest System Files:
 - data/contest_foods.json - 24 foods across 6 categories
 - data/contest_opponents.json - 4 ranks, 8 opponents with personalities
 - src/ui/contest_minigame.gd - Main minigame logic
-- src/ui/preference_selection_dialog.gd - First-time preference selection
-- src/ui/contest_setup_dialog.gd - Rank/opponent preview
-- scenes/ui/contest_minigame.tscn, preference_selection_dialog.tscn, contest_setup_dialog.tscn
+- src/ui/preference_selection_dialog.gd - First-time preference selection (player only)
+- src/ui/contest_setup_dialog.gd - Rank/opponent preview, rival integration
+- src/ui/draft_pick_dialog.gd - Licensee rookie selection
+- scenes/ui/contest_minigame.tscn, preference_selection_dialog.tscn, contest_setup_dialog.tscn, draft_pick_dialog.tscn
 
 Game Flow:
-- Main Menu → Archetype Selection → Name Entry → (Augment Choice for Cybergoth) → Save Slot → Gameplay
-- Auto-save at start of each new day
-- Escape opens game menu with Return to Main Menu
+- Main Menu → Archetype Selection → Name Entry → (Augment Choice for Cybergoth) → Gameplay
+- Single save file, auto-saves at start of each new day
+- Escape opens pause menu: "Main Menu" or "Resume"
 - Game over on failed grace period (save deleted)
 
 Controls (quick reference):
-- WASD/Arrows: Navigate | E: Select | Q: Back (hold to close all)
+- WASD: Navigate | E: Select | Q: Back (hold to close all)
 - Space: Pause | Escape: Game menu | R: Recruitment terminal
 - A/D: Add/Remove (in dialogs) | Hold V: Confirm
 - Name entry: Full typing, Esc to go back
@@ -740,5 +749,202 @@ Next Up:
 - Game over screen with relocation paperwork
 - Win condition / endgame (city-crushing finale)
 - UI to display character kinks and audience breakdown
+
+================================================================================
+LICENSEE DRAFT PICK SYSTEM (Implemented)
+================================================================================
+
+When player selects Licensee archetype, they don't just get a random rookie.
+Instead, 3 rookie NPCs are presented for them to choose from.
+
+DRAFT FLOW:
+1. Player selects Licensee archetype
+2. Player enters their manager name
+3. Draft Pick UI appears with 3 rookie candidates
+4. Player reviews stats/preferences and picks one (A/D to select, E to confirm)
+5. The 2 rejected rookies become contest rivals
+6. Game begins with chosen rookie on roster
+
+ROOKIE GENERATION (Capped Stats):
+- Stats randomly generated within rookie range: 20-45 base
+- Small archetype stat bonuses applied (+20% instead of +30%)
+- Food preferences randomly assigned at creation
+- Archetype randomly selected (excluding Licensee)
+- Display shows: Name, archetype, all 4 stats, likes/dislikes
+
+REJECTED ROOKIES AS RIVALS:
+- The 2 not picked are saved to GameManager.contest_rivals
+- 60% chance to face a rival at Pro and Elite rank contests
+- Shown as "[RIVAL]" in opponent info
+- Creates personal stakes - "the ones that got away"
+- Rivals persist through save/load
+
+NPC FOOD PREFERENCES:
+- All NPCs get randomize_food_preferences() called at creation
+- NPCs automatically get random preferences at contest entry (if somehow missing)
+- Preference selection dialog only shown for player characters
+
+FILES:
+- scenes/game.gd - Draft pick integration, _show_draft_pick_dialog()
+- scenes/ui/draft_pick_dialog.tscn - Draft selection UI scene
+- src/ui/draft_pick_dialog.gd - Draft pick dialog logic
+- src/ui/main_screen.gd - Skip preference dialog for NPCs
+- src/ui/contest_setup_dialog.gd - Rival opponent selection at high ranks
+- src/autoloads/game_manager.gd - contest_rivals storage, get_rival_as_opponent()
+
+================================================================================
+FATIGUE SYSTEM (Activity-Based)
+================================================================================
+
+Fatigue builds from completing activities, not from low mood. This creates
+strategic trade-offs between pushing for income and managing streamer wellness.
+
+FATIGUE GAIN (on activity completion):
+| Activity   | Base Fatigue | Notes                              |
+|------------|--------------|-------------------------------------|
+| Streaming  | 15           | Main income, main fatigue source   |
+| Contest    | 20           | High effort, high reward           |
+| Socialize  | 8            | Light activity                     |
+| Binge      | 5            | Eating is easy                     |
+| Milking    | 10           | Moderate effort                    |
+| Dr. Dan's  | 3            | Just shopping/procedures           |
+| Relax      | 0            | Recovery activity (reduces fatigue)|
+
+STAMINA MODIFIER:
+- Higher stamina = less fatigue gained per activity
+- Formula: actual_fatigue = base_fatigue * (1.0 - stamina/200)
+- At stamina 0: 100% fatigue (base amount)
+- At stamina 50: 75% fatigue
+- At stamina 100: 50% fatigue
+- Cybergoth passive: -20% energy drain also applies to fatigue
+
+FATIGUE EFFECTS:
+| Fatigue Level | Effect                                    |
+|---------------|-------------------------------------------|
+| 0-30          | None - normal operation                   |
+| 31-60         | -10% effectiveness on all activities      |
+| 61-80         | -25% effectiveness, mood decay +1/tick    |
+| 81-99         | -50% effectiveness, mood decay +2/tick    |
+| 100           | Exhausted - cannot work (only Relax)      |
+
+FATIGUE RECOVERY:
+- Relax station: -20 fatigue on completion (main recovery method)
+- End of day: -10 fatigue (natural overnight recovery)
+- High mood (70+) while idle: -1 fatigue per tick (slow passive)
+
+DESIGN RATIONALE:
+- Direct cause/effect: work hard → get tired
+- Strategic depth: pace your streamers vs push for quota
+- Stamina stat matters: affects how long they can work
+- Relax station has clear purpose: fatigue recovery
+- No death spiral: fatigue doesn't cause more fatigue
+
+================================================================================
+TERMINOLOGY / GLOSSARY
+================================================================================
+
+PERFORMER
+The player character when playing as any archetype except Licensee. Performers
+can personally do content creation (streaming, contests, etc.) and are managed
+directly by the player. When you "play as a performer," you ARE the content
+creator, not just managing others.
+
+LICENSEE
+Special archetype where the player is a manager only. Cannot perform content
+personally. Instead, drafts a rookie NPC at game start and manages NPCs. Gets
+bonuses to NPC effectiveness and reduced salaries.
+
+NPC (Non-Player Character)
+Hired talent that performs content for the player. Generated through recruitment
+or drafted (for Licensee). Have their own stats, preferences, and progression.
+NPCs work for the player and take a salary cut.
+
+STREAMER
+Generic term for any character (performer or NPC) who creates content. Used
+interchangeably with "talent" and "character" in context.
+
+CHARACTER
+Any data entity with stats (CharacterData). Includes the player's performer,
+hired NPCs, contest opponents, and draft rookies.
+
+ARCHETYPE
+Character class that determines starting stats, passive abilities, and fat
+distribution. Six archetypes: Glutton, Broodmother, E-Girl, Cybergoth, Hucow,
+Licensee.
+
+KINK
+Content category a character is certified to perform. Purchased from Dr. Dan.
+Examples: stuffing, pregnancy, lactation. Required for certain stream types.
+
+STATION
+Location where characters perform activities. Examples: Cam Studio (streaming),
+Contest (eating competition), Relax (fatigue recovery), Dr. Dan's (augments).
+
+QUOTA
+Weekly earnings target set by CammTec. Must be met or player enters grace
+period. Escalates 20% each week.
+
+GRACE PERIOD
+3-day window to pay shortfall + late fee after missing quota. Failure ends game.
+
+CAPACITY
+How much food a character can eat per session. Affects contest performance and
+stuffing streams. Trainable stat.
+
+FOLLOWER RANK
+Character progression tier based on follower count. 23 ranks from "Nobody" (50)
+to "Singularity" (1 billion). Determines contest tier access and space upgrades.
+
+CONTEST RIVAL
+NPCs rejected during Licensee draft pick. 60% chance to face them as opponents
+at Pro/Elite contest ranks. Personal stakes.
+
+HOLD V
+Input method for confirmations where pressing E isn't available (e.g., name
+entry where typing is active). Hold V key for ~0.35 seconds to confirm.
+Shows progress bar animation.
+
+================================================================================
+TECHNICAL PITFALLS & PATTERNS
+================================================================================
+
+TYPED ARRAY JSON LOADING:
+GDScript 4 typed arrays (Array[String], Array[Dictionary]) cannot be assigned
+from JSON parsing, which returns untyped Arrays. Always use helper functions:
+  var categories: Array[String] = GameManager.load_json_array_string(json_array)
+  var items: Array[Dictionary] = GameManager.load_json_array_dict(json_array)
+
+INPUT HANDLING:
+- All dialogs should use _input() not _unhandled_input() for consistent behavior
+- Always call get_viewport().set_input_as_handled() after processing input
+- Use action names: "accept" (E), "back" (Q), "move_up/down/left/right" (WASD)
+
+ASYNC UI TIMING:
+When using await before updating UI, always check node validity:
+  await get_tree().process_frame
+  if not is_instance_valid(self) or not visible:
+	  return
+  _update_selection()
+
+SIGNAL PARAMETER CHANGES:
+When refactoring signals, search entire codebase for .connect() calls.
+Godot doesn't validate signal signatures at parse time - mismatches crash at runtime.
+
+SAVE DATA SYNC:
+to_dict() and from_dict() on CharacterData must stay in sync. When adding new
+fields, update BOTH methods. Consider a version field for migration.
+
+PAUSE STATE (Stack-Based):
+Use GameManager.push_pause("dialog_name") when opening a dialog.
+Use GameManager.pop_pause("dialog_name") when closing.
+Game only unpauses when stack is empty (supports nested dialogs).
+Use GameManager.clear_pause_stack() for scene transitions (main menu, new game).
+Example:
+  func open_dialog():
+	  show()
+	  GameManager.push_pause("my_dialog")
+  func close_dialog():
+	  hide()
+	  GameManager.pop_pause("my_dialog")
 
 ================================================================================

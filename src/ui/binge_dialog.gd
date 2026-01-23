@@ -31,7 +31,7 @@ func open_dialog(character: CharacterData) -> void:
 	_is_holding = false
 	_refresh_display()
 	show()
-	GameManager.is_paused = true
+	GameManager.push_pause("binge_dialog")
 
 
 func _process(delta: float) -> void:
@@ -50,7 +50,7 @@ func _process(delta: float) -> void:
 
 func close_dialog() -> void:
 	hide()
-	GameManager.is_paused = false
+	GameManager.pop_pause("binge_dialog")
 	dialog_closed.emit()
 
 
@@ -93,6 +93,8 @@ func _refresh_inventory_list() -> void:
 			inventory_list.add_child(btn)
 
 	await get_tree().process_frame
+	if not is_instance_valid(self) or not visible:
+		return
 	_update_selection_visuals()
 
 
@@ -115,6 +117,8 @@ func _refresh_queue_list() -> void:
 			queue_list.add_child(btn)
 
 	await get_tree().process_frame
+	if not is_instance_valid(self) or not visible:
+		return
 	_update_selection_visuals()
 
 

@@ -4,7 +4,7 @@ CHANKO NABE - Controls
 
 GAME CONTROLS
 -------------
-Arrow Keys / WASD   Navigate menus
+WASD                Navigate menus
 E                   Select / Accept
 Q                   Back / Cancel
 Space               Pause game time

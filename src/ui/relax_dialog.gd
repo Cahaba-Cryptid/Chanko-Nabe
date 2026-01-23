@@ -27,8 +27,7 @@ func open_dialog(character: CharacterData) -> void:
 	_build_options()
 	_update_display()
 	show()
-	# Pause game while dialog is open
-	GameManager.is_paused = true
+	GameManager.push_pause("relax_dialog")
 
 
 func _build_options() -> void:
@@ -73,6 +72,8 @@ func _update_display() -> void:
 
 	# Wait a frame for buttons to be added, then update selection
 	await get_tree().process_frame
+	if not is_instance_valid(self) or not visible:
+		return
 	_update_selection_visuals()
 
 
@@ -123,7 +124,7 @@ func _close_dialog() -> void:
 
 func close_dialog() -> void:
 	hide()
-	GameManager.is_paused = false
+	GameManager.pop_pause("relax_dialog")
 	dialog_closed.emit()
 
 

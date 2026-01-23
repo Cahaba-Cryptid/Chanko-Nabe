@@ -43,72 +43,51 @@ func open_dialog(character: CharacterData) -> void:
 
 	_refresh_display()
 	show()
-	GameManager.is_paused = true
+	GameManager.push_pause("preference_selection_dialog")
 
 
 func close_dialog() -> void:
 	hide()
-	GameManager.is_paused = false
+	GameManager.pop_pause("preference_selection_dialog")
 	dialog_cancelled.emit()
 
 
 func _refresh_display() -> void:
-	_refresh_likes_list()
-	_refresh_dislikes_list()
+	_refresh_category_list(likes_list, true)
+	_refresh_category_list(dislikes_list, false)
 	_update_hint()
 	_update_confirm_button()
+	await get_tree().process_frame
+	if not is_instance_valid(self) or not visible:
+		return
+	_update_selection_visuals()
 
 
-func _refresh_likes_list() -> void:
-	for child in likes_list.get_children():
+func _refresh_category_list(list_container: VBoxContainer, is_likes_column: bool) -> void:
+	## Populate a column with category buttons
+	for child in list_container.get_children():
 		child.queue_free()
 
-	for i in range(FOOD_CATEGORIES.size()):
-		var category := FOOD_CATEGORIES[i]
+	var selected_in_column: Array[String] = _selected_likes if is_likes_column else _selected_dislikes
+	var selected_in_other: Array[String] = _selected_dislikes if is_likes_column else _selected_likes
+	var selected_icon := "♥" if is_likes_column else "✗"
+	var selected_color := Color(0.5, 1.0, 0.5) if is_likes_column else Color(1.0, 0.5, 0.5)
+
+	for category in FOOD_CATEGORIES:
 		var btn := Button.new()
 		btn.text = CATEGORY_NAMES.get(category, category.capitalize())
 		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		btn.custom_minimum_size = Vector2(150, 30)
 
-		# Visual feedback
-		if category in _selected_likes:
-			btn.text = "[♥] " + btn.text
-			btn.modulate = Color(0.5, 1.0, 0.5)  # Green for selected
-		elif category in _selected_dislikes:
-			btn.modulate = Color(0.5, 0.5, 0.5)  # Grey if already disliked
+		if category in selected_in_column:
+			btn.text = "[%s] %s" % [selected_icon, btn.text]
+			btn.modulate = selected_color
+		elif category in selected_in_other:
+			btn.modulate = Color(0.5, 0.5, 0.5)  # Grey if selected in other column
 		else:
 			btn.text = "[ ] " + btn.text
 
-		likes_list.add_child(btn)
-
-	await get_tree().process_frame
-	_update_selection_visuals()
-
-
-func _refresh_dislikes_list() -> void:
-	for child in dislikes_list.get_children():
-		child.queue_free()
-
-	for i in range(FOOD_CATEGORIES.size()):
-		var category := FOOD_CATEGORIES[i]
-		var btn := Button.new()
-		btn.text = CATEGORY_NAMES.get(category, category.capitalize())
-		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		btn.custom_minimum_size = Vector2(150, 30)
-
-		# Visual feedback
-		if category in _selected_dislikes:
-			btn.text = "[✗] " + btn.text
-			btn.modulate = Color(1.0, 0.5, 0.5)  # Red for selected
-		elif category in _selected_likes:
-			btn.modulate = Color(0.5, 0.5, 0.5)  # Grey if already liked
-		else:
-			btn.text = "[ ] " + btn.text
-
-		dislikes_list.add_child(btn)
-
-	await get_tree().process_frame
-	_update_selection_visuals()
+		list_container.add_child(btn)
 
 
 func _update_selection_visuals() -> void:
@@ -156,41 +135,47 @@ func _update_confirm_button() -> void:
 	confirm_button.text = "Confirm (E)" if can_confirm else "Select 2 Likes & 2 Dislikes"
 
 
-func _unhandled_input(event: InputEvent) -> void:
+func _input(event: InputEvent) -> void:
 	if not visible:
 		return
 
 	# Navigation
-	if event.is_action_pressed("ui_up") or event.is_action_pressed("move_up"):
+	if event.is_action_pressed("move_up"):
 		_current_index = maxi(0, _current_index - 1)
 		_update_selection_visuals()
-	elif event.is_action_pressed("ui_down") or event.is_action_pressed("move_down"):
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("move_down"):
 		_current_index = mini(FOOD_CATEGORIES.size() - 1, _current_index + 1)
 		_update_selection_visuals()
-	elif event.is_action_pressed("ui_left") or event.is_action_pressed("move_left"):
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("move_left"):
 		_current_column = 0
 		_update_selection_visuals()
-	elif event.is_action_pressed("ui_right") or event.is_action_pressed("move_right"):
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("move_right"):
 		_current_column = 1
 		_update_selection_visuals()
+		get_viewport().set_input_as_handled()
 
-	# Toggle selection
-	if event.is_action_pressed("ui_accept") or event.is_action_pressed("interact"):
+	# Toggle selection or confirm
+	if event.is_action_pressed("accept"):
 		if _can_confirm():
 			_confirm_selection()
 		else:
 			_toggle_current_selection()
+		get_viewport().set_input_as_handled()
 
 	# Cancel
-	if event.is_action_pressed("ui_cancel") or event.is_action_pressed("back"):
+	if event.is_action_pressed("back"):
 		close_dialog()
+		get_viewport().set_input_as_handled()
 
 
 func _toggle_current_selection() -> void:
 	if _current_index >= FOOD_CATEGORIES.size():
 		return
 
-	var category := FOOD_CATEGORIES[_current_index]
+	var category: String = FOOD_CATEGORIES[_current_index]
 
 	if _current_column == 0:
 		# Toggling likes
@@ -217,5 +202,5 @@ func _confirm_selection() -> void:
 		return
 
 	hide()
-	GameManager.is_paused = false
+	GameManager.pop_pause("preference_selection_dialog")
 	preferences_selected.emit(Array(_selected_likes), Array(_selected_dislikes))

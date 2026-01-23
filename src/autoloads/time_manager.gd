@@ -118,6 +118,9 @@ func _process_end_of_day() -> void:
 	# Process burnout recovery for all characters
 	_process_burnout_recovery()
 
+	# Overnight fatigue recovery (-10 for all characters)
+	_process_overnight_fatigue_recovery()
+
 	# Clear remaining assignments
 	for assignment in _active_assignments:
 		var character: CharacterData = assignment["character"]
@@ -134,6 +137,19 @@ func _process_burnout_recovery() -> void:
 				var msg := "%s recovered from burnout (charm restored)" % character.display_name
 				activity_logged.emit(msg)
 				print(msg)
+
+
+func _process_overnight_fatigue_recovery() -> void:
+	## Natural fatigue recovery overnight (-10 for all characters)
+	const OVERNIGHT_RECOVERY := 10
+
+	for character in GameManager.characters:
+		if character.fatigue > 0:
+			var old_fatigue: int = character.fatigue
+			character.modify_fatigue(-OVERNIGHT_RECOVERY)
+			var recovered: int = old_fatigue - character.fatigue
+			if recovered > 0:
+				print("%s recovered %d fatigue overnight" % [character.display_name, recovered])
 
 
 func _process_follower_decay() -> void:
@@ -177,33 +193,36 @@ func _process_follower_decay() -> void:
 func _process_hunger_mood_fatigue() -> void:
 	## Process hunger/mood/fatigue effects every game tick (10 minutes)
 	## - Empty stomach (fullness 0) drains mood
-	## - Low mood (below 20) increases fatigue
 	## - Eating (fullness > 0) slowly restores mood if hungry
+	## - High fatigue causes mood decay
+	## - High mood while idle slowly recovers fatigue
 	const HUNGER_MOOD_DRAIN := 1  # Mood lost per tick when stomach empty
-	const LOW_MOOD_THRESHOLD := 20  # Below this, fatigue builds
-	const FATIGUE_GAIN_RATE := 2  # Fatigue gained per tick when mood is low
 	const EATING_MOOD_RESTORE := 1  # Mood restored per tick when fed and mood < 50
+	const HIGH_MOOD_THRESHOLD := 70  # Above this, passive fatigue recovery while idle
+	const FATIGUE_MOOD_DECAY_THRESHOLD_1 := 61  # Fatigue level for +1 mood decay
+	const FATIGUE_MOOD_DECAY_THRESHOLD_2 := 81  # Fatigue level for +2 mood decay
 
 	for character in GameManager.characters:
-		# Skip if character is busy (they're focused on task)
-		if character.is_busy():
-			continue
-
 		var old_fatigue: int = character.fatigue
+		var is_idle: bool = not character.is_busy()
 
-		# Hunger affects mood
-		if character.stomach_fullness == 0:
-			# Empty stomach - mood drops
-			character.modify_mood(-HUNGER_MOOD_DRAIN)
-		elif character.mood < 50:
-			# Has food in stomach and mood is below neutral - slowly recover mood
-			character.modify_mood(EATING_MOOD_RESTORE)
+		# Hunger affects mood (only when idle - busy characters are focused)
+		if is_idle:
+			if character.stomach_fullness == 0:
+				# Empty stomach - mood drops
+				character.modify_mood(-HUNGER_MOOD_DRAIN)
+			elif character.mood < 50:
+				# Has food in stomach and mood is below neutral - slowly recover mood
+				character.modify_mood(EATING_MOOD_RESTORE)
 
-		# Low mood causes fatigue buildup
-		if character.mood < LOW_MOOD_THRESHOLD:
-			character.modify_fatigue(FATIGUE_GAIN_RATE)
-		elif character.fatigue > 0 and character.mood >= 50:
-			# If mood is decent, slowly recover from fatigue
+		# High fatigue causes mood decay (always, even when busy)
+		if character.fatigue >= FATIGUE_MOOD_DECAY_THRESHOLD_2:
+			character.modify_mood(-2)
+		elif character.fatigue >= FATIGUE_MOOD_DECAY_THRESHOLD_1:
+			character.modify_mood(-1)
+
+		# High mood while idle slowly recovers fatigue
+		if is_idle and character.fatigue > 0 and character.mood >= HIGH_MOOD_THRESHOLD:
 			character.modify_fatigue(-1)
 
 		# Log exhaustion events
@@ -460,7 +479,8 @@ func _complete_standard_task(character: CharacterData, _station_name: String) ->
 	var follower_income := maxi(10, character.followers / 100)
 	var licensee_bonus := _get_licensee_effectiveness_bonus()
 	var effectiveness := character.get_effectiveness(licensee_bonus) / 100.0
-	var raw_income := follower_income * (0.5 + effectiveness)
+	var fatigue_penalty := _get_fatigue_effectiveness_penalty(character)
+	var raw_income := follower_income * (0.5 + effectiveness) * fatigue_penalty
 
 	# Pregnancy bonus: BB factor increases stream income (+10% per BB)
 	if character.bb_factor > 0:
@@ -483,6 +503,7 @@ func _complete_standard_task(character: CharacterData, _station_name: String) ->
 	GameManager.add_money(final_income)
 	character.add_experience(10)
 	_apply_energy_drain(character, 15)
+	_apply_fatigue_gain(character, 15)  # Streaming is tiring
 
 	# Track last stream day for follower decay
 	character.last_stream_day = GameManager.current_day
@@ -493,17 +514,22 @@ func _complete_standard_task(character: CharacterData, _station_name: String) ->
 
 
 func _complete_relax_task(character: CharacterData, original_duration: float) -> void:
-	## Relax station - restores energy based on time spent
+	## Relax station - restores energy and recovers fatigue
 	const ENERGY_PER_HOUR := 10
+	const FATIGUE_RECOVERY := 20  # Flat fatigue recovery per relax session
 
 	var old_energy := character.energy
+	var old_fatigue := character.fatigue
 	var hours_relaxed := original_duration / 60.0
 	var energy_restored := int(hours_relaxed * ENERGY_PER_HOUR)
 
 	character.modify_energy(energy_restored)
-	var actual_restored := character.energy - old_energy
+	character.modify_fatigue(-FATIGUE_RECOVERY)
 
-	var activity_msg := "%s relaxed for %d hours and recovered %d energy" % [character.display_name, int(hours_relaxed), actual_restored]
+	var actual_energy := character.energy - old_energy
+	var actual_fatigue := old_fatigue - character.fatigue
+
+	var activity_msg := "%s relaxed and recovered %d energy, %d fatigue" % [character.display_name, actual_energy, actual_fatigue]
 	activity_logged.emit(activity_msg)
 	print(activity_msg)
 
@@ -512,6 +538,7 @@ func _complete_contest_task(character: CharacterData) -> void:
 	## Eating contest - placeholder for future functionality
 	character.add_experience(15)
 	_apply_energy_drain(character, 20)
+	_apply_fatigue_gain(character, 20)  # Contests are exhausting
 
 	var activity_msg := "%s participated in an eating contest" % character.display_name
 	activity_logged.emit(activity_msg)
@@ -522,6 +549,7 @@ func _complete_socialize_task(character: CharacterData) -> void:
 	## Socialize - helps maintain followers and gain new ones
 	character.add_experience(5)
 	_apply_energy_drain(character, 10)
+	_apply_fatigue_gain(character, 8)  # Light activity
 	character.modify_mood(10)
 
 	# Track last socialize day for follower decay
@@ -529,7 +557,8 @@ func _complete_socialize_task(character: CharacterData) -> void:
 
 	# Gain some followers from socializing (charm helps)
 	var charm_bonus := character.charm / 50.0  # 0-2x multiplier
-	var followers_gained := int(10 * charm_bonus)
+	var fatigue_penalty := _get_fatigue_effectiveness_penalty(character)
+	var followers_gained := int(10 * charm_bonus * fatigue_penalty)
 
 	# E-Girl archetype bonus: +20% socializing gains
 	var socialize_bonus: float = character.get_archetype_passive("socializing_bonus", 0.0)
@@ -558,7 +587,8 @@ func _complete_stream_task(character: CharacterData) -> void:
 	var follower_income := maxi(10, character.followers / 100)
 	var licensee_bonus := _get_licensee_effectiveness_bonus()
 	var effectiveness := character.get_effectiveness(licensee_bonus) / 100.0
-	var raw_income := follower_income * (0.5 + effectiveness) * quality_mult
+	var fatigue_penalty := _get_fatigue_effectiveness_penalty(character)
+	var raw_income := follower_income * (0.5 + effectiveness) * quality_mult * fatigue_penalty
 
 	# Audience match multiplier - how well stream content matches follower preferences
 	var audience_match := character.get_audience_match(stream_kinks)
@@ -587,6 +617,7 @@ func _complete_stream_task(character: CharacterData) -> void:
 	GameManager.add_money(final_income)
 	character.add_experience(15)
 	_apply_energy_drain(character, 20)
+	_apply_fatigue_gain(character, 15)  # Streaming is tiring
 
 	# Track last stream day for follower decay
 	character.last_stream_day = GameManager.current_day
@@ -682,6 +713,7 @@ func _complete_binge_task(character: CharacterData) -> void:
 	# Binging improves mood but drains some energy
 	character.modify_mood(5 + items_eaten)
 	_apply_energy_drain(character, 5)
+	_apply_fatigue_gain(character, 5)  # Eating is easy
 
 	# Capacity training: eating past 75% fullness can increase stomach capacity
 	var fullness_percent := float(character.stomach_fullness) / float(character.stomach_capacity) * 100.0
@@ -750,6 +782,7 @@ func _complete_milking_task(character: CharacterData) -> void:
 	character.milk_full_ticks = 0  # Reset discomfort
 	character.modify_mood(10)  # Relief from milking
 	_apply_energy_drain(character, 5)  # Light energy cost
+	_apply_fatigue_gain(character, 10)  # Moderate effort
 
 	var activity_msg := "%s was milked (%d units) and earned $%d" % [character.display_name, milk_collected, final_income]
 	activity_logged.emit(activity_msg)
@@ -784,6 +817,9 @@ func _complete_dr_dan_task(character: CharacterData) -> void:
 
 	# Clear pending treatments
 	character.pending_dr_dan_treatments.clear()
+
+	# Light fatigue from the visit (procedures/shopping)
+	_apply_fatigue_gain(character, 3)
 
 	var activity_msg := "%s finished treatment at Dr. Dan's (%s)" % [character.display_name, ", ".join(treatment_names)]
 	activity_logged.emit(activity_msg)
@@ -908,6 +944,31 @@ func _apply_energy_drain(character: CharacterData, base_drain: int) -> void:
 	var drain_reduction: float = character.get_archetype_passive("energy_drain_reduction", 0.0)
 	var actual_drain := int(float(base_drain) * (1.0 - drain_reduction))
 	character.modify_energy(-actual_drain)
+
+
+func _apply_fatigue_gain(character: CharacterData, base_fatigue: int) -> void:
+	## Apply fatigue gain from activity completion
+	## - Stamina reduces fatigue gain (0 stamina = 100%, 100 stamina = 50%)
+	## - Cybergoth energy_drain_reduction also applies to fatigue
+	var stamina_modifier := 1.0 - (float(character.stamina) / 200.0)  # 50-100% based on stamina
+	var drain_reduction: float = character.get_archetype_passive("energy_drain_reduction", 0.0)
+	var actual_fatigue := int(float(base_fatigue) * stamina_modifier * (1.0 - drain_reduction))
+	actual_fatigue = maxi(1, actual_fatigue)  # Always gain at least 1 fatigue
+	character.modify_fatigue(actual_fatigue)
+
+
+func _get_fatigue_effectiveness_penalty(character: CharacterData) -> float:
+	## Get effectiveness penalty based on current fatigue level
+	## Returns a multiplier (1.0 = no penalty, 0.5 = 50% effectiveness)
+	var fatigue := character.fatigue
+	if fatigue <= 30:
+		return 1.0  # No penalty
+	elif fatigue <= 60:
+		return 0.90  # -10% effectiveness
+	elif fatigue <= 80:
+		return 0.75  # -25% effectiveness
+	else:
+		return 0.50  # -50% effectiveness (81-99 fatigue)
 
 
 func _get_player_character() -> CharacterData:

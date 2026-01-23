@@ -582,9 +582,12 @@ func _input(event: InputEvent) -> void:
 	if _recruitment_terminal and _recruitment_terminal.visible:
 		return
 
-	# Pause toggles with Space
+	# Pause toggles with Space (manual pause, separate from dialog pauses)
 	if event.is_action_pressed("pause"):
-		GameManager.is_paused = not GameManager.is_paused
+		if GameManager.is_paused and "manual_pause" in GameManager.get_pause_stack():
+			GameManager.pop_pause("manual_pause")
+		elif not GameManager.is_paused:
+			GameManager.push_pause("manual_pause")
 		get_viewport().set_input_as_handled()
 		return
 
@@ -606,7 +609,10 @@ func _input(event: InputEvent) -> void:
 		return
 
 	# Navigation
-	if event.is_action_pressed("move_left") or event.is_action_pressed("move_right"):
+	if event.is_action_pressed("move_up") or event.is_action_pressed("move_down"):
+		_handle_vertical_nav(event)
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("move_left") or event.is_action_pressed("move_right"):
 		_handle_horizontal_nav(event)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("accept"):
@@ -632,6 +638,30 @@ func _handle_horizontal_nav(event: InputEvent) -> void:
 			if detail_panel:
 				detail_panel.navigate_tabs(direction)
 		MenuState.ASSIGNING:
+			if _station_buttons.size() > 0:
+				_selected_station_index = wrapi(
+					_selected_station_index + direction,
+					0,
+					_station_buttons.size()
+				)
+
+	_update_selection_visuals()
+
+
+func _handle_vertical_nav(event: InputEvent) -> void:
+	var direction := 1 if event.is_action_pressed("move_down") else -1
+
+	match _menu_state:
+		MenuState.ROSTER:
+			# W/S navigates between characters (same as A/D for consistency)
+			if _character_tokens.size() > 0:
+				_selected_character_index = wrapi(
+					_selected_character_index + direction,
+					0,
+					_character_tokens.size()
+				)
+		MenuState.ASSIGNING:
+			# W/S navigates between stations
 			if _station_buttons.size() > 0:
 				_selected_station_index = wrapi(
 					_selected_station_index + direction,
@@ -1052,7 +1082,7 @@ func _on_recruitment_terminal_closed() -> void:
 
 func _open_contest(character: CharacterData) -> void:
 	# Check if already competed today
-	if not character.can_enter_contest(TimeManager.current_day):
+	if not character.can_enter_contest(GameManager.current_day):
 		add_activity("%s already competed today!" % character.display_name)
 		return
 
@@ -1060,8 +1090,14 @@ func _open_contest(character: CharacterData) -> void:
 
 	# Check if character has food preferences set
 	if not character.has_food_preferences():
-		# Open preference selection first
-		_open_preference_selection(character)
+		if character.is_player:
+			# Player characters choose their preferences
+			_open_preference_selection(character)
+		else:
+			# NPCs get random preferences automatically
+			character.randomize_food_preferences()
+			add_activity("%s's food preferences were determined" % character.display_name)
+			_open_contest_setup(character)
 	else:
 		# Go directly to contest setup
 		_open_contest_setup(character)

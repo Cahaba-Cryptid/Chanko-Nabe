@@ -112,6 +112,8 @@ func _create_item_rows() -> void:
 
 	# Wait a frame then update visuals
 	await get_tree().process_frame
+	if not is_instance_valid(self) or not visible:
+		return
 	_update_selection_visuals()
 
 

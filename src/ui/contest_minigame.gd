@@ -56,6 +56,14 @@ var _mash_required: bool = false
 var _mash_progress: float = 0.0
 const MASH_THRESHOLD := 3.0  # Mashes needed to swallow when overstuffed
 
+# Layout constants
+const PLAYER_X := 200.0  # Player's X position on belt
+const CPU_X := 600.0     # CPU's X position on belt
+const GRAB_RANGE := 80.0 # How close to grab food
+
+# Rank ID to index mapping
+const RANK_INDICES := {"beginner": 0, "amateur": 1, "pro": 2, "elite": 3}
+
 # Tolerance tracking (for after contest)
 var _tolerance_gained: Dictionary = {}  # {category: count}
 
@@ -88,7 +96,9 @@ func _load_food_data() -> void:
 		var json := JSON.new()
 		if json.parse(file.get_as_text()) == OK:
 			var data: Dictionary = json.data
-			_food_categories = Array(data.get("categories", []))
+			_food_categories.clear()
+			for category in data.get("categories", []):
+				_food_categories.append(category)
 			for food in data.get("foods", []):
 				_foods.append(food)
 		file.close()
@@ -195,28 +205,32 @@ func _process_finished(_delta: float) -> void:
 	pass
 
 
-func _unhandled_input(event: InputEvent) -> void:
+func _input(event: InputEvent) -> void:
 	if not visible or _state != State.PLAYING:
 		return
 
-	# Movement (W/S or Up/Down)
-	if event.is_action_pressed("ui_up") or event.is_action_pressed("move_up"):
+	# Movement (W/S)
+	if event.is_action_pressed("move_up"):
 		_move_player(-1)
-	elif event.is_action_pressed("ui_down") or event.is_action_pressed("move_down"):
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("move_down"):
 		_move_player(1)
+		get_viewport().set_input_as_handled()
 
-	# Grab (E or ui_accept)
-	if event.is_action_pressed("ui_accept") or event.is_action_pressed("interact"):
+	# Grab (E)
+	if event.is_action_pressed("accept"):
 		if _mash_required:
 			_mash_progress += 1.0
 			if _mash_progress >= MASH_THRESHOLD:
 				_finish_eating_player()
 		elif not _player_eating and not _player_grabbing:
 			_try_grab_food()
+		get_viewport().set_input_as_handled()
 
-	# Cancel (Q or ui_cancel)
-	if event.is_action_pressed("ui_cancel") or event.is_action_pressed("back"):
+	# Cancel (Q)
+	if event.is_action_pressed("back"):
 		_cancel_contest()
+		get_viewport().set_input_as_handled()
 
 
 func _move_player(direction: int) -> void:
@@ -233,23 +247,24 @@ func _move_player(direction: int) -> void:
 
 
 func _try_grab_food() -> void:
-	var belt: Array[Dictionary]
-	if _player_y_position == -1:
-		belt = _belt_top
-	elif _player_y_position == 1:
-		belt = _belt_bottom
-	else:
+	var belt := _get_belt_at_position(_player_y_position)
+	if belt.is_empty():
 		return  # In center, can't grab
-
-	# Find closest food in grab range
-	var grab_range := 80.0
-	var player_x := 200.0  # Player's X position on belt
 
 	for food in belt:
 		var food_x: float = food.get("x", 0.0)
-		if abs(food_x - player_x) < grab_range:
+		if abs(food_x - PLAYER_X) < GRAB_RANGE:
 			_start_eating_player(food, belt)
 			return
+
+
+func _get_belt_at_position(y_position: int) -> Array[Dictionary]:
+	## Returns the belt array for a given Y position, or empty if in center
+	if y_position == -1:
+		return _belt_top
+	elif y_position == 1:
+		return _belt_bottom
+	return []
 
 
 func _start_eating_player(food: Dictionary, belt: Array[Dictionary]) -> void:
@@ -462,8 +477,7 @@ func _find_best_cpu_target() -> Dictionary:
 					score -= 50
 
 		# Distance factor - prefer closer food
-		var cpu_x := 600.0  # CPU's X position
-		var distance := abs(food_x - cpu_x)
+		var distance: float = absf(food_x - CPU_X)
 		score -= distance * 0.1
 
 		# Random factor based on decision quality
@@ -490,19 +504,12 @@ func _try_grab_cpu() -> void:
 	if _cpu_target_food.is_empty():
 		return
 
-	var belt: Array[Dictionary]
-	if _cpu_y_position == -1:
-		belt = _belt_top
-	elif _cpu_y_position == 1:
-		belt = _belt_bottom
-	else:
+	var belt := _get_belt_at_position(_cpu_y_position)
+	if belt.is_empty():
 		return
 
-	var grab_range := 80.0
-	var cpu_x := 600.0
-
 	var food_x: float = _cpu_target_food.get("x", 0.0)
-	if abs(food_x - cpu_x) < grab_range and _cpu_target_food in belt:
+	if abs(food_x - CPU_X) < GRAB_RANGE and _cpu_target_food in belt:
 		_start_eating_cpu(_cpu_target_food, belt)
 
 
@@ -551,21 +558,28 @@ func _finish_eating_cpu() -> void:
 
 func _end_contest() -> void:
 	_state = State.FINISHED
-
 	var won := _player_score > _cpu_score
+	_finalize_contest(won, false)
 
-	# Apply tolerance gains
-	for category in _tolerance_gained:
+
+func _apply_tolerance_gains() -> void:
+	## Apply all accumulated tolerance to the player character
+	for category: String in _tolerance_gained.keys():
 		var count: int = _tolerance_gained[category]
 		for i in range(count):
 			_player_character.add_food_tolerance(category)
 
-	# Calculate rewards
+
+func _finalize_contest(won: bool, passed_out: bool) -> void:
+	## Common logic for ending contest (normal end or pass-out)
+	_apply_tolerance_gains()
+
 	var rewards := {
 		"won": won,
 		"player_score": _player_score,
 		"cpu_score": _cpu_score,
-		"tolerance_gained": _tolerance_gained
+		"tolerance_gained": _tolerance_gained,
+		"passed_out": passed_out
 	}
 
 	if won:
@@ -574,7 +588,7 @@ func _end_contest() -> void:
 		rewards["followers"] = _rank_data.get("prize_followers", 50)
 
 		# Check if rank was beaten
-		var rank_index := _get_rank_index(_rank_data.get("id", "beginner"))
+		var rank_index: int = RANK_INDICES.get(_rank_data.get("id", "beginner"), 0)
 		if rank_index > _player_character.contest_highest_rank:
 			_player_character.contest_highest_rank = rank_index
 			rewards["rank_up"] = true
@@ -584,36 +598,7 @@ func _end_contest() -> void:
 
 func _end_contest_pass_out(player_passed_out: bool) -> void:
 	_state = State.FINISHED
-
-	# Apply tolerance even on pass out
-	for category in _tolerance_gained:
-		var count: int = _tolerance_gained[category]
-		for i in range(count):
-			_player_character.add_food_tolerance(category)
-
-	var rewards := {
-		"won": not player_passed_out,
-		"player_score": _player_score,
-		"cpu_score": _cpu_score,
-		"passed_out": player_passed_out,
-		"tolerance_gained": _tolerance_gained
-	}
-
-	if not player_passed_out:
-		rewards["money"] = _rank_data.get("prize_money", 100)
-		rewards["xp"] = _rank_data.get("prize_xp", 10)
-		rewards["followers"] = _rank_data.get("prize_followers", 50)
-
-	_show_results(rewards)
-
-
-func _get_rank_index(rank_id: String) -> int:
-	match rank_id:
-		"beginner": return 0
-		"amateur": return 1
-		"pro": return 2
-		"elite": return 3
-		_: return 0
+	_finalize_contest(not player_passed_out, player_passed_out)
 
 
 func _show_results(rewards: Dictionary) -> void:
@@ -642,12 +627,12 @@ func _show_results(rewards: Dictionary) -> void:
 	var tolerance: Dictionary = rewards.get("tolerance_gained", {})
 	if not tolerance.is_empty():
 		result_text += "\n\nTolerance Progress:"
-		for category in tolerance:
+		for category: String in tolerance.keys():
 			result_text += "\n  %s: +%d" % [category.capitalize(), tolerance[category]]
 
 	result_text += "\n\nPress E to continue"
 
-	var result_label: Label = result_panel.get_node_or_null("ResultLabel")
+	var result_label: Label = result_panel.get_node_or_null("MarginContainer/ResultLabel")
 	if result_label:
 		result_label.text = result_text
 
@@ -662,7 +647,9 @@ func _show_results(rewards: Dictionary) -> void:
 func _wait_for_continue() -> void:
 	while true:
 		await get_tree().process_frame
-		if Input.is_action_just_pressed("ui_accept") or Input.is_action_just_pressed("interact"):
+		if not is_instance_valid(self) or not visible:
+			return
+		if Input.is_action_just_pressed("accept"):
 			break
 
 
@@ -731,6 +718,6 @@ func _update_ui() -> void:
 
 
 func _update_belt_visuals() -> void:
-	# This would update food item positions on screen
-	# For now, we'll rely on the scene having the visual nodes
+	# TODO: Create visual food nodes and update their positions based on _belt_top and _belt_bottom
+	# For now, food positions are tracked in data but not rendered visually
 	pass

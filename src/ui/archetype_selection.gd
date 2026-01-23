@@ -1,15 +1,13 @@
 extends Control
 class_name ArchetypeSelection
-## Archetype selection screen - choose your archetype and save slot
+## Archetype selection screen - choose your archetype and name
 
-signal archetype_selected(slot: int, archetype_id: String, player_name: String, starter_augment_id: String)
+signal archetype_selected(archetype_id: String, player_name: String, starter_augment_id: String)
 signal cancelled
 
-enum SelectionPhase { ARCHETYPE, NAME, AUGMENT_CHOICE, SLOT, CONFIRM_OVERWRITE }
+enum SelectionPhase { ARCHETYPE, NAME, AUGMENT_CHOICE }
 
-const SLOT_COUNT := 3
-const SAVE_PATH_TEMPLATE := "user://save_slot_%s.dat"
-const SLOT_NAMES := ["A", "B", "C"]
+const HOLD_DURATION := 0.35  # Seconds to hold V to confirm name
 const CYBERGOTH_STARTER_AUGMENTS := [
 	"starter_breast_enhancer",
 	"starter_stomach_liner",
@@ -19,13 +17,14 @@ const CYBERGOTH_STARTER_AUGMENTS := [
 var _phase: SelectionPhase = SelectionPhase.ARCHETYPE
 var _archetypes: Array[Dictionary] = []
 var _selected_archetype_index: int = 0
-var _selected_slot_index: int = 0
 var _selected_augment_index: int = 0
-var _confirm_selection: int = 1  # 0 = Yes, 1 = No
-var _slot_data: Array[Dictionary] = []
 var _player_name: String = ""
 var _starter_augment_id: String = ""
 var _starter_augments: Array[Dictionary] = []  # Loaded from dr_dan_items.json
+
+# Hold to confirm name
+var _hold_timer: float = 0.0
+var _is_holding: bool = false
 
 @onready var title_label: Label = $CenterContainer/PanelContainer/MarginContainer/VBox/TitleLabel
 @onready var content_container: HBoxContainer = $CenterContainer/PanelContainer/MarginContainer/VBox/ContentContainer
@@ -44,8 +43,20 @@ var _starter_augments: Array[Dictionary] = []  # Loaded from dr_dan_items.json
 func _ready() -> void:
 	_load_archetypes()
 	_load_starter_augments()
-	_refresh_slot_data()
 	_update_display()
+
+
+func _process(delta: float) -> void:
+	if not visible or _phase != SelectionPhase.NAME:
+		return
+
+	if _is_holding:
+		_hold_timer += delta
+		_update_name_hint_progress()
+		if _hold_timer >= HOLD_DURATION:
+			_hold_timer = 0.0
+			_is_holding = false
+			_confirm_name()
 
 
 func _notification(what: int) -> void:
@@ -86,27 +97,6 @@ func _load_archetypes() -> void:
 					_archetypes.append(arch)
 
 
-func _refresh_slot_data() -> void:
-	_slot_data.clear()
-	for i in range(SLOT_COUNT):
-		var slot_name: String = SLOT_NAMES[i]
-		var save_path := SAVE_PATH_TEMPLATE % slot_name
-		var data := {"name": slot_name, "index": i, "exists": false, "timestamp": "", "day": 0, "money": 0}
-
-		if FileAccess.file_exists(save_path):
-			var file := FileAccess.open(save_path, FileAccess.READ)
-			if file:
-				var save_data: Variant = file.get_var()
-				file.close()
-				if save_data is Dictionary:
-					data["exists"] = true
-					data["timestamp"] = save_data.get("timestamp", "Unknown")
-					data["day"] = save_data.get("current_day", 0)
-					data["money"] = save_data.get("money", 0)
-
-		_slot_data.append(data)
-
-
 func _update_display() -> void:
 	match _phase:
 		SelectionPhase.ARCHETYPE:
@@ -115,10 +105,6 @@ func _update_display() -> void:
 			_show_name_entry()
 		SelectionPhase.AUGMENT_CHOICE:
 			_show_augment_choice()
-		SelectionPhase.SLOT:
-			_show_slot_selection()
-		SelectionPhase.CONFIRM_OVERWRITE:
-			_show_confirm_overwrite()
 
 
 func _show_archetype_selection() -> void:
@@ -141,16 +127,20 @@ func _show_archetype_selection() -> void:
 		archetype_list.add_child(button)
 
 	await get_tree().process_frame
+	if not is_instance_valid(self) or not visible:
+		return
 	_update_archetype_selection()
 	_update_details_panel()
 
 
 func _show_name_entry() -> void:
 	title_label.text = "Enter Your Name"
-	hint_label.text = "Type your name | Enter: Confirm | Esc: Back"
+	hint_label.text = "Type your name | Hold V: Confirm | Esc: Back"
 	content_container.hide()
 	slot_container.hide()
 	name_container.show()
+	_hold_timer = 0.0
+	_is_holding = false
 
 	# Set default name if empty
 	if _player_name == "":
@@ -161,6 +151,8 @@ func _show_name_entry() -> void:
 
 	# Focus the input field
 	await get_tree().process_frame
+	if not is_instance_valid(self) or not visible:
+		return
 	name_input.grab_focus()
 	name_input.caret_column = name_input.text.length()
 
@@ -194,6 +186,8 @@ func _show_augment_choice() -> void:
 		slot_container.add_child(button)
 
 	await get_tree().process_frame
+	if not is_instance_valid(self) or not visible:
+		return
 	_update_augment_button_selection()
 
 
@@ -214,80 +208,6 @@ func _update_augment_button_selection() -> void:
 			btn.add_theme_stylebox_override("normal", style)
 		else:
 			btn.remove_theme_stylebox_override("normal")
-
-
-func _show_slot_selection() -> void:
-	title_label.text = "Choose Save Slot"
-	hint_label.text = "Arrow Keys: Navigate | E: Select | Q: Back"
-	content_container.hide()
-	slot_container.show()
-	name_container.hide()
-
-	# Build slot buttons
-	for child in slot_container.get_children():
-		child.queue_free()
-
-	for i in range(_slot_data.size()):
-		var data: Dictionary = _slot_data[i]
-		var button := Button.new()
-
-		if data["exists"]:
-			var money_str := _format_money(data["money"])
-			button.text = "Slot %s - Day %d | %s (Will Overwrite)" % [data["name"], data["day"], money_str]
-		else:
-			button.text = "Slot %s - Empty" % data["name"]
-
-		button.custom_minimum_size = Vector2(400, 45)
-		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		slot_container.add_child(button)
-
-	# Find first empty slot, or default to 0
-	_selected_slot_index = 0
-	for i in range(_slot_data.size()):
-		if not _slot_data[i]["exists"]:
-			_selected_slot_index = i
-			break
-
-	await get_tree().process_frame
-	_update_slot_button_selection()
-
-
-func _show_confirm_overwrite() -> void:
-	title_label.text = "Overwrite Save?"
-	hint_label.text = "Arrow Keys: Navigate | E: Select | Q: Cancel"
-	content_container.hide()
-	slot_container.show()
-	name_container.hide()
-
-	var slot_data: Dictionary = _slot_data[_selected_slot_index]
-
-	# Clear and rebuild
-	for child in slot_container.get_children():
-		child.queue_free()
-
-	var info_label := Label.new()
-	info_label.text = "Slot %s contains a Day %d save.\nStart new game and overwrite?" % [slot_data["name"], slot_data["day"]]
-	info_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	slot_container.add_child(info_label)
-
-	var spacer := Control.new()
-	spacer.custom_minimum_size = Vector2(0, 15)
-	slot_container.add_child(spacer)
-
-	var yes_button := Button.new()
-	yes_button.text = "Yes, Start New Game"
-	yes_button.custom_minimum_size = Vector2(250, 45)
-	slot_container.add_child(yes_button)
-
-	var no_button := Button.new()
-	no_button.text = "No, Choose Different Slot"
-	no_button.custom_minimum_size = Vector2(250, 45)
-	slot_container.add_child(no_button)
-
-	_confirm_selection = 1  # Default to "No"
-
-	await get_tree().process_frame
-	_update_confirm_button_selection()
 
 
 func _update_archetype_selection() -> void:
@@ -376,33 +296,6 @@ func _format_passive(key: String, value: Variant) -> String:
 			return ""
 
 
-func _update_slot_button_selection() -> void:
-	var buttons := slot_container.get_children()
-	for i in range(buttons.size()):
-		if buttons[i] is Button:
-			var button: Button = buttons[i]
-			if i == _selected_slot_index:
-				_apply_selected_style(button)
-			else:
-				button.remove_theme_stylebox_override("normal")
-
-
-func _update_confirm_button_selection() -> void:
-	var children := slot_container.get_children()
-	if children.size() < 4:
-		return
-
-	var yes_button: Button = children[2]
-	var no_button: Button = children[3]
-
-	if _confirm_selection == 0:
-		_apply_selected_style(yes_button)
-		no_button.remove_theme_stylebox_override("normal")
-	else:
-		yes_button.remove_theme_stylebox_override("normal")
-		_apply_selected_style(no_button)
-
-
 func _apply_selected_style(button: Button) -> void:
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.2, 0.2, 0.2)
@@ -423,10 +316,6 @@ func _input(event: InputEvent) -> void:
 			_handle_name_input(event)
 		SelectionPhase.AUGMENT_CHOICE:
 			_handle_augment_input(event)
-		SelectionPhase.SLOT:
-			_handle_slot_input(event)
-		SelectionPhase.CONFIRM_OVERWRITE:
-			_handle_confirm_input(event)
 
 
 func _handle_archetype_input(event: InputEvent) -> void:
@@ -450,31 +339,57 @@ func _handle_archetype_input(event: InputEvent) -> void:
 
 
 func _handle_name_input(event: InputEvent) -> void:
-	# Let LineEdit handle text input - only intercept Enter and Escape
+	# Let LineEdit handle text input - only intercept V (hold to confirm) and Escape
 	# Do NOT intercept Q or WASD during text entry (needed for typing)
-	if event is InputEventKey and event.pressed:
-		if event.keycode == KEY_ESCAPE:
+	if event is InputEventKey:
+		var key_event := event as InputEventKey
+		if key_event.keycode == KEY_ESCAPE and key_event.pressed:
 			name_input.release_focus()  # Release focus so other screens can receive input
 			_phase = SelectionPhase.ARCHETYPE
 			_update_display()
 			get_viewport().set_input_as_handled()
-		elif event.keycode == KEY_ENTER:
-			# Confirm name
-			var entered_name := name_input.text.strip_edges()
-			if entered_name.length() > 0:
-				_player_name = entered_name
-				name_input.release_focus()  # Release focus when leaving name entry
-				# Cybergoth gets augment choice, others go straight to slot
-				var arch: Dictionary = _archetypes[_selected_archetype_index]
-				if arch.get("id", "") == "cybergoth":
-					_phase = SelectionPhase.AUGMENT_CHOICE
-					_selected_augment_index = 0
-				else:
-					_starter_augment_id = ""
-					_phase = SelectionPhase.SLOT
-					_refresh_slot_data()
-				_update_display()
+		elif key_event.keycode == KEY_V:
+			# Hold V to confirm name
+			if key_event.pressed and not key_event.echo:
+				_is_holding = true
+				_hold_timer = 0.0
+			elif not key_event.pressed:
+				_is_holding = false
+				_hold_timer = 0.0
+				_update_name_hint_progress()
 			get_viewport().set_input_as_handled()
+
+
+func _update_name_hint_progress() -> void:
+	if not hint_label:
+		return
+
+	var base_hint := "Type your name | Hold V: Confirm | Esc: Back"
+
+	if _is_holding:
+		var progress := minf(_hold_timer / HOLD_DURATION, 1.0)
+		var bar_length := 10
+		var filled := int(progress * bar_length)
+		var bar := "[" + "=".repeat(filled) + " ".repeat(bar_length - filled) + "]"
+		hint_label.text = base_hint + "\n" + bar
+	else:
+		hint_label.text = base_hint
+
+
+func _confirm_name() -> void:
+	var entered_name := name_input.text.strip_edges()
+	if entered_name.length() > 0:
+		_player_name = entered_name
+		name_input.release_focus()  # Release focus when leaving name entry
+		# Cybergoth gets augment choice, others finalize immediately
+		var arch: Dictionary = _archetypes[_selected_archetype_index]
+		if arch.get("id", "") == "cybergoth":
+			_phase = SelectionPhase.AUGMENT_CHOICE
+			_selected_augment_index = 0
+			_update_display()
+		else:
+			_starter_augment_id = ""
+			_finalize_selection()
 
 
 func _handle_augment_input(event: InputEvent) -> void:
@@ -487,55 +402,13 @@ func _handle_augment_input(event: InputEvent) -> void:
 		_update_augment_button_selection()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("accept"):
-		# Store selected augment and proceed to slot selection
+		# Store selected augment and finalize
 		if _selected_augment_index < _starter_augments.size():
 			_starter_augment_id = _starter_augments[_selected_augment_index].get("id", "")
-		_phase = SelectionPhase.SLOT
-		_refresh_slot_data()
-		_update_display()
+		_finalize_selection()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("back"):
 		_phase = SelectionPhase.NAME
-		_update_display()
-		get_viewport().set_input_as_handled()
-
-
-func _handle_slot_input(event: InputEvent) -> void:
-	if event.is_action_pressed("move_up"):
-		_selected_slot_index = wrapi(_selected_slot_index - 1, 0, SLOT_COUNT)
-		_update_slot_button_selection()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("move_down"):
-		_selected_slot_index = wrapi(_selected_slot_index + 1, 0, SLOT_COUNT)
-		_update_slot_button_selection()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("accept"):
-		if _slot_data[_selected_slot_index]["exists"]:
-			_phase = SelectionPhase.CONFIRM_OVERWRITE
-			_update_display()
-		else:
-			_finalize_selection()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("back"):
-		_phase = SelectionPhase.NAME
-		_update_display()
-		get_viewport().set_input_as_handled()
-
-
-func _handle_confirm_input(event: InputEvent) -> void:
-	if event.is_action_pressed("move_up") or event.is_action_pressed("move_down"):
-		_confirm_selection = 1 - _confirm_selection
-		_update_confirm_button_selection()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("accept"):
-		if _confirm_selection == 0:  # Yes
-			_finalize_selection()
-		else:  # No
-			_phase = SelectionPhase.SLOT
-			_update_display()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("back"):
-		_phase = SelectionPhase.SLOT
 		_update_display()
 		get_viewport().set_input_as_handled()
 
@@ -543,16 +416,4 @@ func _handle_confirm_input(event: InputEvent) -> void:
 func _finalize_selection() -> void:
 	var arch: Dictionary = _archetypes[_selected_archetype_index]
 	var archetype_id: String = arch.get("id", "feeder")
-	archetype_selected.emit(_selected_slot_index, archetype_id, _player_name, _starter_augment_id)
-
-
-func _format_money(value: int) -> String:
-	var str_val := str(value)
-	var result := ""
-	var count := 0
-	for i in range(str_val.length() - 1, -1, -1):
-		if count > 0 and count % 3 == 0:
-			result = "," + result
-		result = str_val[i] + result
-		count += 1
-	return "$" + result
+	archetype_selected.emit(archetype_id, _player_name, _starter_augment_id)
