@@ -1,0 +1,6 @@
+[gd_resource type="FontVariation" load_steps=2 format=3 uid="uid://b43fugtsc7sjs"]
+
+[ext_resource type="FontFile" uid="uid://do8vumws103ox" path="res://assets/fonts/The Japan Collection Official Font v2.ttf" id="1_wniip"]
+
+[resource]
+base_font = ExtResource("1_wniip")
